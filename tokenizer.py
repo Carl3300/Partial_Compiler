@@ -12,13 +12,12 @@ keywords = [ 'auto', 'break', 'case', 'char', 'const', 'continue', 'default', 'd
 # all operators in C
 operators = [ '+', '-', '*', '/', '%', '<', '>', '!', '|', '^', '~', '=', '?', ':', ',', '*', '&', '(', ')', '{', '}']
 
-def tokenize(source_code):
+def tokenize(lines):
     tokens = []
     realTokens = []
-    lines = source_code.split('\n')
     isString = False
+    word = ''
     for line_number, line in enumerate(lines, 1):
-        word = ''
         for char in line:
             if isString:
                 if char != '"':
@@ -41,6 +40,7 @@ def tokenize(source_code):
                     continue
                 if char in operators:
                     tokens.append((TOKEN_OPERATOR, char, line_number))
+                    word = ''
                 if char == '"':
                     word += '"'
                     isString = True
@@ -50,6 +50,7 @@ def tokenize(source_code):
                 tokens.append((TOKEN_KEYWORD, word, line_number))
             else:
                 tokens.append((TOKEN_IDENTIFIER, word, line_number))
+            word = ''
     # cant think of better way to filter without a bunch of bools
     for token in tokens:
         if token[0] == TOKEN_IDENTIFIER:
