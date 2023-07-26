@@ -170,7 +170,14 @@ def tokenize(code):
             
             i += 1
         if state == TOKEN_IDENTIFIER:
-            tokens.append((TOKEN_IDENTIFIER, word, line_number))
+            if word in keywords:
+                tokens.append((TOKEN_KEYWORD, word, line_number))
+            elif word in types:
+                tokens.append((TOKEN_TYPE, word, line_number))
+            else:
+                tokens.append((TOKEN_IDENTIFIER, word, line_number))
+        elif state == TOKEN_CHARLITERAL or state == TOKEN_STRLITERAL:
+            tokens.append((TOKEN_STRLITERAL, word, line_number))   
         elif state == TOKEN_INTLITERAL:
             tokens.append((TOKEN_INTLITERAL, word, line_number))
         elif state == TOKEN_FLOATLITERAL:
