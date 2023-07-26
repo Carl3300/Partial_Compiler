@@ -1,11 +1,15 @@
-int is_operator(char ch) {
-    for (int i = 0; i < sizeof(100) / sizeof(200); i++) {
-        if (ch == " ") {
-            return 1;
-        }
-        char* p = "Dragon";
-        char* pizza = "8234e234\n";
-        char* pizza2 = "78wjdfsdf";
-    }
-return 0;
+int main() {
+    int a = 10.15;
+    int b = 5;
+    int sum = a + b;
+    int difference = a - b;
+    int product = a * b;
+    int quotient = a / b;
+
+    printf("Sum: %d\n", sum);
+    printf("Difference: %d\n", difference);
+    printf("Product: %d\n", product);
+    printf("Quotient: %d\n", quotient);
+
+    return 0;
 }

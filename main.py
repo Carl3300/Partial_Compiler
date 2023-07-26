@@ -1,7 +1,7 @@
 import tokenizer
 import code_parser
 
-test_file = "testcode2.c"
+test_file = "testcode.c"
 
 if __name__ == "__main__":
     src = open(test_file).read().splitlines()
