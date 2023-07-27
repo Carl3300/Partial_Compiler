@@ -4,12 +4,12 @@ class Error:
         self.error_line = line
         self.error_details = details
     def __repr__(self) -> str:
-        return f"{self.error_name}: {self.error_details}\n On line: {self.error_line}"
+        return f"{self.error_name}: {self.error_details}\nOn line: {self.error_line}"
 
 class InvalidSyntax(Error):
     def __init__(self, line, details) -> None:
-        super.__init__("Invalid Syntax", line, details)
+        super().__init__("Invalid Syntax", line, details)
 
 class IllegalChar(Error):
     def __init__(self, line, details) -> None:
-        super.__init__("Illegal Character", line, details)
+        super().__init__("Illegal Character", line, details)

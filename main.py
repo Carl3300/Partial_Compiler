@@ -10,5 +10,8 @@ if __name__ == "__main__":
     if error: 
         print(error)
     else:
-        ParseCode(tokens)
-    
+        nodes, error = ParseCode(tokens)
+        if error:
+            print(error)
+        else:
+            print(nodes)

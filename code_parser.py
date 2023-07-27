@@ -1,5 +1,9 @@
-from tokenizer import Token
+"""
+https://github.com/Carl3300/compiler_for_C/blob/main/tokenizer.py assistance found from Parsing 
+"""
 
+from tokenizer import Token
+from error import InvalidSyntax
 # Token types
 TOKEN_KEYWORD = 'KEYWORD'
 TOKEN_IDENTIFIER = 'IDENTIFIER'
@@ -118,6 +122,22 @@ class FunctionCallNode():
         self.name = name
         self.arguments = arguments
 
+class Result:
+    def __init__(self) -> None:
+        self.error = None
+        self.node = None
+    def register(self, res):
+        if isinstance(res, Result):
+            if res.error:
+                self.error = res.error
+            return res.node
+        return res
+    def success(self, node):
+        self.node = node
+        return self
+    def fail(self, error):
+        self.error = error
+        return self
 
 # Parser
 class Parser:
@@ -132,14 +152,19 @@ class Parser:
         return self.currToken
 
     def Parse(self):
+        res = self.expr()
+        if not res.error and self.currToken != TOKEN_EOF:
+            return res.fail(InvalidSyntax(self.currToken.line, "Expected +, -, *, or /,"))
         return self.expr()
 
     # Basic Math Operations
     def factor(self):
+        res = Result()
         if self.currToken.type in [TOKEN_INTLITERAL, TOKEN_FLOATLITERAL]:
-            res = NumberNode(self.currToken)
-            self.advance()
-            return res
+            result = NumberNode(self.currToken)
+            res.register(self.advance())
+            return res.success(result)
+        return res.fail(InvalidSyntax(self.currToken.line, "Expected Integer or Float"))
 
     def term(self):
         return self.bin_op(self.factor, (TOKEN_MULTIPLY, TOKEN_DIVIDE, TOKEN_MOD))
@@ -148,15 +173,20 @@ class Parser:
         return self.bin_op(self.term, (TOKEN_PLUS, TOKEN_MINUS))
 
     def bin_op(self, func, ops):
-        left = func()
+        res = Result()
+        left = res.register(func())
+        if res.error:
+            return res
         while self.currToken.type in ops:
             op_tok = self.currToken
-            self.advance()
-            right = func()
+            res.register(self.advance())
+            right = res.register(func())
+            if res.error:
+                return res
             left = BinaryOpNode(left, op_tok, right)
-        return left
+        return res.success(left)
 
 def ParseCode(tokens):
     parser = Parser(tokens)
     ast = parser.Parse()
-    print(ast)
+    return ast.node, ast.error

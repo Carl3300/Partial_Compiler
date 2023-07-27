@@ -80,7 +80,8 @@ keywords = [ 'break', 'case', 'const', 'continue', 'default', 'do', 'else', 'enu
 comments = ['//', '/*', '*/']
 
 # C Types
-types = [ 'auto', 'char', 'double', 'float', 'int', 'short', 'long', 'struct', 'void']
+#types = [ 'auto', 'char', 'double', 'float', 'int', 'short', 'long', 'struct', 'void']
+types = [ 'bool', 'char', 'float', 'int', 'string', 'void']
 
 # C Operators
 operators = [ '+', '-', '*', '/', '%','=', '+=', '=+', "-=", "=-", "*=", "=*", "/=", "=/", "%=", "=%", '++', "--",
