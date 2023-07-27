@@ -12,22 +12,46 @@ TOKEN_MINUS = 'MINUS'
 TOKEN_MULTIPLY = 'MULTIPLY'
 TOKEN_DIVIDE = 'DIVIDE'
 TOKEN_MOD = 'MOD'
+TOKEN_ASSIGN = 'ASSIGN'
+TOKEN_PLUSEQ = 'PLUSEQ'
+TOKEN_RPLUSEQ = 'RPLUSEQ'
+TOKEN_MINUSEQ = 'MINUSEQ'
+TOKEN_RMINUSEQ = 'RMINUSEQ'
+TOKEN_MULTIPLYEQ = 'MULTIPLYEQ'
+TOKEN_RMULTIPLYEQ = 'RMULTIPLYEQ'
+TOKEN_DIVIDEDEQ = 'DIVIDEEQ'
+TOKEN_RDIVIDEEQ = 'RDIVIDEEQ'
+TOKEN_MODEQ = 'MODEQ'
+TOKEN_RMODEQ = 'RMODEQ'
+TOKEN_PLUS1 = 'PLUS1'
+TOKEN_MINUS1 = 'MINUS1'
 TOKEN_LTHAN = 'LTHAN'
-TOKEN_RTHAN = 'RTHAN'
+TOKEN_GTHAN = 'GTHAN'
+TOKEN_GEQ = 'GEQ'
+TOKEN_LEQ = 'LEQ'
+TOKEN_LSHIFT = 'LSHIFT'
+TOKEN_RSHIFT = 'RSHIFT'
 TOKEN_NOT = 'NOT'
+TOKEN_NOTEQ = 'NOTEQ'
+TOKEN_BAND = 'BAND'
 TOKEN_BOR = 'BOR'
+TOKEN_AND = 'AND'
+TOKEN_OR = 'OR'
 TOKEN_XOR = 'XOR'
 TOKEN_BNOT = 'BNOT'
-TOKEN_ASSIGN = 'ASSIGN'
 TOKEN_TERNARY = 'TERNARY'
 TOKEN_COLON = 'COLON'
+TOKEN_PAREN = 'PAREN'
+TOKEN_CURLBRACKET = 'CURLBRACKET'
+TOKEN_BRACKET = 'BRACKET'
 
 # C Punctuation
 TOKEN_SEMI = 'SEMI'
 TOKEN_COMMA = 'COMMA'
-TOKEN_BAND = 'BAND'
 TOKEN_LPAREN = 'LPAREN'
 TOKEN_RPAREN = 'RPAREN'
+TOKEN_LCURLBRACKET = 'LCURLBRACKET'
+TOKEN_RCURLBRACKET = 'RCURLBRACKET'
 TOKEN_LBRACKET = 'LBRACKET'
 TOKEN_RBRACKET = 'RBRACKET'
 
@@ -42,28 +66,145 @@ TOKEN_AUTO = 'AUTO'
 TOKEN_STRUCT = 'STRUCT'
 TOKEN_VOID = 'VOID'
 
+# Comment
+TOKEN_COMMENT = 'COMMENT'
+
 # C Keywords
 keywords = [ 'break', 'case', 'const', 'continue', 'default', 'do', 'else', 'enum', 'extern',
              'for', 'printf', 'goto', 'if', 'register', 'return', 'signed', 'sizeof', 'static', 
              'switch', 'typedef', 'union', 'unsigned', 'volatile', 'while']
+
+# C Comment Operators
+comments = ['//', '/*', '*/']
 
 # C Types
 types = [ 'auto', 'char', 'double', 'float', 'int', 'short', 'long', 'struct', 'void']
 
 # C Operators
 operators = [ '+', '-', '*', '/', '%','=', '+=', '=+', "-=", "=-", "*=", "=*", "/=", "=/", "%=", "=%", '++', "--",
-              '<', '>', '>=', "<=", "<<", ">>", '!', '!=', '&', '|',  '&&', '||', '^', '~', '?', ':', "()", '{}', "[]" ]
+              '<', '>', "<=", '>=', "<<", ">>", '!', '!=', '&', '|',  '&&', '||', '^', '~', '?', ':', "()", '{}', "[]" ]
 
 # C Punctuation
 punctuations = [';', ',', '(', ')', '{', '}', '[', ']']
 
+class Token:
+    def __init__(self, Token_Name: str, Token_Val, Token_Line: int) -> None:
+        self.type = Token_Name
+        self.value = Token_Val
+        self.line = Token_Line
+    def __repr__(self) -> str:
+        if self.value: 
+            return f'{self.type}: {self.value} (line: {self.line})'
+        return f'{self.type}'
+
+def assignOperator(tokens, word, line_number):
+    if word =='+':
+        tokens.append(Token(TOKEN_PLUS, word, line_number))
+    elif word == '-':
+        tokens.append(Token(TOKEN_MINUS, word, line_number))
+    elif word == '*':
+        tokens.append(Token(TOKEN_MULTIPLY, word, line_number))
+    elif word == '/':
+        tokens.append(Token(TOKEN_DIVIDE, word, line_number))
+    elif word == '%':
+        tokens.append(Token(TOKEN_MOD, word, line_number))
+    elif word == '=':
+        tokens.append(Token(TOKEN_ASSIGN, word, line_number))
+    elif word == '+=':
+        tokens.append(Token(TOKEN_PLUSEQ, word, line_number))
+    elif word == '=+':
+        tokens.append(Token(TOKEN_RPLUSEQ, word, line_number))
+    elif word == '-=':
+        tokens.append(Token(TOKEN_MINUSEQ, word, line_number))
+    elif word == '=-':
+        tokens.append(Token(TOKEN_RMINUSEQ, word, line_number))
+    elif word == '*=':
+        tokens.append(Token(TOKEN_MULTIPLYEQ, word, line_number))
+    elif word == '=*':
+        tokens.append(Token(TOKEN_RMULTIPLYEQ, word, line_number))
+    elif word == '/=':
+        tokens.append(Token(TOKEN_DIVIDEDEQ, word, line_number))
+    elif word == '=/':
+        tokens.append(Token(TOKEN_RDIVIDEEQ, word, line_number))
+    elif word == '%=':
+        tokens.append(Token(TOKEN_MODEQ, word, line_number))
+    elif word == '=%':
+        tokens.append(Token(TOKEN_RMODEQ, word, line_number))
+    elif word == '++':
+        tokens.append(Token(TOKEN_PLUS1, word, line_number))
+    elif word == '--':
+        tokens.append(Token(TOKEN_MINUS1, word, line_number))
+    elif word == '<':
+        tokens.append(Token(TOKEN_LTHAN, word, line_number))
+    elif word == '>':
+        tokens.append(Token(TOKEN_GTHAN, word, line_number))
+    elif word == '<=':
+        tokens.append(Token(TOKEN_LEQ, word, line_number))
+    elif word == '>=':
+        tokens.append(Token(TOKEN_GEQ, word, line_number))
+    elif word == '<<':
+        tokens.append(Token(TOKEN_LSHIFT, word, line_number))
+    elif word == '>>':
+        tokens.append(Token(TOKEN_RSHIFT, word, line_number))
+    elif word == '!':
+        tokens.append(Token(TOKEN_NOT, word, line_number))
+    elif word == '!=':
+        tokens.append(Token(TOKEN_NOTEQ, word, line_number))
+    elif word == '&':
+        tokens.append(Token(TOKEN_BAND, word, line_number))
+    elif word == '|':
+        tokens.append(Token(TOKEN_BOR, word, line_number))
+    elif word == '&&':
+        tokens.append(Token(TOKEN_AND, word, line_number))
+    elif word == '||':
+        tokens.append(Token(TOKEN_OR, word, line_number))
+    elif word == '^':
+        tokens.append(Token(TOKEN_XOR, word, line_number))
+    elif word == '~':
+        tokens.append(Token(TOKEN_BNOT, word, line_number)) 
+    elif word == '?':
+        tokens.append(Token(TOKEN_TERNARY, word, line_number)) 
+    elif word == ':':
+        tokens.append(Token(TOKEN_COLON, word, line_number))
+    elif word == '()':
+        tokens.append(Token(TOKEN_PAREN, word, line_number)) 
+    elif word == '{}':
+        tokens.append(Token(TOKEN_CURLBRACKET, word, line_number)) 
+    elif word == '[]':
+        tokens.append(Token(TOKEN_BRACKET, word, line_number))
+    else:
+        tokens.append(Token(TOKEN_OPERATOR, word, line_number))
+    return tokens
+
+def assignPunctutation(tokens, word, line_number):
+    if word == ';':
+        tokens.append(Token(TOKEN_SEMI, word, line_number)) 
+    elif word == ',':
+        tokens.append(Token(TOKEN_COMMA, word, line_number)) 
+    elif word == '(':
+        tokens.append(Token(TOKEN_LPAREN, word, line_number)) 
+    elif word == ')':
+        tokens.append(Token(TOKEN_RPAREN, word, line_number)) 
+    elif word == '{':
+        tokens.append(Token(TOKEN_LCURLBRACKET, word, line_number)) 
+    elif word == '}':
+        tokens.append(Token(TOKEN_RCURLBRACKET, word, line_number))
+    elif word == '[':
+        tokens.append(Token(TOKEN_LBRACKET, word, line_number)) 
+    elif word == ']':
+        tokens.append(Token(TOKEN_RBRACKET, word, line_number))
+    else:
+        tokens.append(Token(TOKEN_PUNCTUATION, word, line_number))
+    return tokens
+
 def tokenize(code):
     tokens = []
+    last_line_number = 0
+    last_char = ''
     state =''
     word = ''
     for line_number, line in enumerate (code, 1):
         i = 0
-        state = ""
         word = ""
         while i < len(line):
             char = line[i]
@@ -96,15 +237,15 @@ def tokenize(code):
                     word += char
                 else:
                     if word in keywords:
-                        tokens.append((TOKEN_KEYWORD, word, line_number))
+                        tokens.append(Token(TOKEN_KEYWORD, word, line_number))
                         state = ""
                         word = ""
                     elif word in types:
-                        tokens.append((TOKEN_TYPE, word, line_number))
+                        tokens.append(Token(TOKEN_TYPE, word, line_number))
                         state = "" 
                         word = ""
                     else :
-                        tokens.append((TOKEN_IDENTIFIER, word, line_number))
+                        tokens.append(Token(TOKEN_IDENTIFIER, word, line_number))
                         state = ""
                         word = ""
                     if char != ' ':
@@ -112,7 +253,7 @@ def tokenize(code):
             elif state == TOKEN_CHARLITERAL:
                 if char == "'":
                     word += char
-                    tokens.append((TOKEN_STRLITERAL, word, line_number))
+                    tokens.append(Token(TOKEN_STRLITERAL, word, line_number))
                     state = ""
                     word = ""
                 else:
@@ -120,7 +261,7 @@ def tokenize(code):
             elif state == TOKEN_STRLITERAL:
                 if char == '"':
                     word += char
-                    tokens.append((TOKEN_STRLITERAL, word, line_number))
+                    tokens.append(Token(TOKEN_STRLITERAL, word, line_number))
                     state = ""
                     word = ""
                 else:
@@ -132,7 +273,7 @@ def tokenize(code):
                     state = TOKEN_FLOATLITERAL
                     word += char
                 else:
-                    tokens.append((TOKEN_INTLITERAL, word, line_number))
+                    tokens.append(Token(TOKEN_INTLITERAL, word, line_number))
                     state = ""
                     word = ""
                     if char != ' ':
@@ -141,7 +282,7 @@ def tokenize(code):
                 if char.isdigit():
                     word += char
                 else:
-                    tokens.append((TOKEN_FLOATLITERAL, word, line_number))
+                    tokens.append(Token(TOKEN_FLOATLITERAL, word, line_number))
                     state = ""
                     word = ""
                     if char != ' ':
@@ -149,8 +290,14 @@ def tokenize(code):
             elif state == TOKEN_OPERATOR:
                 if word + char in operators:
                     word += char
+                elif word + char in comments:
+                    word += char
+                    state = TOKEN_COMMENT
+                    if word == "//":
+                        word = ""
+                        break
                 else:
-                    tokens.append((TOKEN_OPERATOR, word, line_number))
+                    tokens = assignOperator(tokens, word, line_number)
                     state = ""
                     word = ""
                     if char != ' ':
@@ -158,32 +305,44 @@ def tokenize(code):
             elif state == TOKEN_PUNCTUATION:
                 if word + char in operators:
                     word += char
-                    tokens.append((TOKEN_OPERATOR, word, line_number))
+                    tokens = assignOperator(tokens, word, line_number)
                     state = ""
                     word = ""
                 else:
-                    tokens.append((TOKEN_PUNCTUATION, word, line_number))
+                    tokens = assignPunctutation(tokens, word, line_number)
                     state = ""
                     word = ""
                     if char != ' ':
                         i -= 1
-            
+            elif state == TOKEN_COMMENT:
+                if last_char + char == "*/" and line_number == last_line_number:
+                    state = ""
+                    word = ""
+                else:
+                    last_char = char
+                    last_line_number = line_number
             i += 1
         if state == TOKEN_IDENTIFIER:
             if word in keywords:
-                tokens.append((TOKEN_KEYWORD, word, line_number))
+                tokens.append(Token(TOKEN_KEYWORD, word, line_number))
             elif word in types:
-                tokens.append((TOKEN_TYPE, word, line_number))
+                tokens.append(Token(TOKEN_TYPE, word, line_number))
             else:
-                tokens.append((TOKEN_IDENTIFIER, word, line_number))
+                tokens.append(Token(TOKEN_IDENTIFIER, word, line_number))
         elif state == TOKEN_CHARLITERAL or state == TOKEN_STRLITERAL:
-            tokens.append((TOKEN_STRLITERAL, word, line_number))   
+            tokens.append(Token(TOKEN_STRLITERAL, word, line_number))   
+            state = ""
         elif state == TOKEN_INTLITERAL:
-            tokens.append((TOKEN_INTLITERAL, word, line_number))
+            tokens.append(Token(TOKEN_INTLITERAL, word, line_number))
+            state = ""
         elif state == TOKEN_FLOATLITERAL:
-            tokens.append((TOKEN_FLOATLITERAL, word, line_number))
+            tokens.append(Token(TOKEN_FLOATLITERAL, word, line_number))
+            state = ""
         elif state == TOKEN_OPERATOR:
-            tokens.append((TOKEN_OPERATOR, word, line_number))
+            tokens = assignOperator(tokens, word, line_number)
+            state = ""
         elif state == TOKEN_PUNCTUATION:
-            tokens.append((TOKEN_PUNCTUATION, word, line_number))
+            tokens = assignPunctutation(tokens, word, line_number)
+            state = ""
+    tokens.append(Token(TOKEN_EOF, "", line_number))
     return tokens
