@@ -6,6 +6,9 @@ test_file = "testcode1.c"
 
 if __name__ == "__main__":
     src = open(test_file).read().splitlines()
-    tokens: Token = tokenize(src)
-    ParseCode(tokens)
+    tokens, error = tokenize(src)
+    if error: 
+        print(error)
+    else:
+        ParseCode(tokens)
     

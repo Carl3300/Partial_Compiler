@@ -75,7 +75,7 @@ class TypeNode:
     def __init__(self, token: Token) -> None:
         self.token = token
     def __repr__(self) -> str:
-        return f'{self.token}'
+        return f'{self.token.type}'
 
 class NumberNode(TypeNode):
     pass
@@ -89,7 +89,7 @@ class BinaryOpNode():
         self.op_tok = operator_token
         self.right = right
     def __repr__(self) -> str:
-        return f"{self.left}, {self.op_tok}, {self.right}"
+        return f"({self.left}, {self.op_tok.type}, {self.right})"
 
 class IdentifierNode():
     def __init__(self, name):
@@ -120,7 +120,7 @@ class FunctionCallNode():
 
 
 # Parser
-class Parser():
+class Parser:
     def __init__(self, tokens) -> None:
         self.tokens = tokens
         self.index = 0
@@ -130,14 +130,16 @@ class Parser():
         if self.index < len(self.tokens):
             self.currToken = self.tokens[self.index]
         return self.currToken
+
     def Parse(self):
-        return self.expr
+        return self.expr()
 
     # Basic Math Operations
     def factor(self):
         if self.currToken.type in [TOKEN_INTLITERAL, TOKEN_FLOATLITERAL]:
+            res = NumberNode(self.currToken)
             self.advance()
-            return NumberNode(self.currToken)
+            return res
 
     def term(self):
         return self.bin_op(self.factor, (TOKEN_MULTIPLY, TOKEN_DIVIDE, TOKEN_MOD))
@@ -156,5 +158,5 @@ class Parser():
 
 def ParseCode(tokens):
     parser = Parser(tokens)
-    ast = parser.Parse
+    ast = parser.Parse()
     print(ast)

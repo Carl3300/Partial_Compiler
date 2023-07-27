@@ -1,3 +1,5 @@
+from error import IllegalChar
+
 # Token types
 TOKEN_KEYWORD = 'KEYWORD'
 TOKEN_IDENTIFIER = 'IDENTIFIER'
@@ -231,7 +233,7 @@ def tokenize(code):
                     i += 1
                     continue
                 else:
-                    raise ValueError(f"Invalid Character found {char} on line {line_number}")
+                    return [], IllegalChar(line_number, char)
             elif state == TOKEN_IDENTIFIER:
                 if char.isalnum() or char == '_':
                     word += char
@@ -345,4 +347,4 @@ def tokenize(code):
             tokens = assignPunctutation(tokens, word, line_number)
             state = ""
     tokens.append(Token(TOKEN_EOF, "", line_number))
-    return tokens
+    return tokens, None
