@@ -232,70 +232,38 @@ class Parser:
           return res.failure(InvalidSyntax(self.currToken.line, "Token cannot appear after previous tokens"))
         return res
 
-    # def program(self):
-    #     pass
 
-    # def programHeader(self):
-    #     pass
-
-    # def programBody(self):
-    #     pass
-
-    def declaration(self):
-        pass
-
-    def procedureDeclaration(self):
-        pass
-
-    def procedureHeader(self):
-        pass
     
-    def parameterList(self):
+
+
+
+
+
+    def functionDefinition(self):
         pass
 
-    def parameter(self):
+    def ifStatement(self): # If Node
         pass
 
-    def procedureBody(self):
+    def else_statement(self):
         pass
 
-    def varDeclaration(self):
+    def whileStatement(self):
         pass
 
-    def typeAndValue(self):
+    def forStatement(self):
         pass
 
-    def statement(self):
+    def condition(self):
         pass
 
-    def procedureCall(self):
+    def expression(self): 
         pass
 
-    def assignment(self): # Variable nodes
+    def term(self): 
         pass
 
-    def loopStatements(self): # loop Node Operation
-        pass
-
-    def returnStatement(self): # Return Node Operation
-        pass
-
-    def bitExpr(self): # Binary Operation
-        pass
-
-    def arithExpr(self): # Binary Operation
-        pass
-
-    def comparisonExpr(self): # Conditional Operation
-        pass
-
-    def termExpr(self): # Binary Operation
-        pass
-
-    def factor(self): 
-        pass
-
-    def atom(self): # Literals        
+    def factor(self): # Literals        
         res = Result()
         curr = self.currToken
         if curr.type in [TOKEN_INTLITERAL, TOKEN_FLOATLITERAL]:
@@ -331,68 +299,51 @@ class Parser:
             else:
                 return res.fail(InvalidSyntax(self.currToken.line, "Excpected a ')'"))
         
-        elif curr.type == TOKEN_LBRACKET:
-            list_expression = res.reg(self.listExpr())
-            if res.error:
-                return res
-            return res.success(list_expression)
+        # elif curr.type == TOKEN_LBRACKET:
+        #     list_expression = res.reg(self.listExpr())
+        #     if res.error:
+        #         return res
+        #     return res.success(list_expression)
 
-        elif curr.type == TOKEN_KEYWORD and curr.word.lower() == "for":
-            for_expression = res.reg(self.forStatement())
-            if res.error:
-                return res
-            return res.success(for_expression)
+        # elif curr.type == TOKEN_KEYWORD and curr.word.lower() == "for":
+        #     for_expression = res.reg(self.forStatement())
+        #     if res.error:
+        #         return res
+        #     return res.success(for_expression)
         
-        elif curr.type == TOKEN_KEYWORD and curr.word.lower() == "while":
-            while_expression = res.reg(self.whileStatement())
-            if res.error:
-                return res
-            return res.success(while_expression)
+        # elif curr.type == TOKEN_KEYWORD and curr.word.lower() == "while":
+        #     while_expression = res.reg(self.whileStatement())
+        #     if res.error:
+        #         return res
+        #     return res.success(while_expression)
 
-        elif curr.type == TOKEN_KEYWORD and curr.word.lower() == "if":
-            if_expression = res.reg(self.ifStatement())
-            if res.error:
-                return res
-            return res.success(if_expression)
+        # elif curr.type == TOKEN_KEYWORD and curr.word.lower() == "if":
+        #     if_expression = res.reg(self.ifStatement())
+        #     if res.error:
+        #         return res
+        #     return res.success(if_expression)
         
-        elif curr.type == TOKEN_KEYWORD and curr.word.lower() == "funct":
-            funct_expression = res.reg(self.forStatement())
-            if res.error:
-                return res
-            return res.success(funct_expression)
+        # elif curr.type == TOKEN_KEYWORD and curr.word.lower() == "funct":
+        #     funct_expression = res.reg(self.forStatement())
+        #     if res.error:
+        #         return res
+        #     return res.success(funct_expression)
 
-    def listExpr(self):
-        res = Result()
-        res.reg_adv()
-        self.advance()
+    # def listExpr(self):
+    #     res = Result()
+    #     res.reg_adv()
+    #     self.advance()
 
-        elements = []
-        if self.currToken == TOKEN_RBRACKET:
-            res.reg_adv()
-            self.advance()
-        else:
-            elements.append(res.reg(self.expr()))
+    #     elements = []
+    #     if self.currToken == TOKEN_RBRACKET:
+    #         res.reg_adv()
+    #         self.advance()
+    #     else:
+    #         elements.append(res.reg(self.expr()))
             
 
-        return res.success(ListNode(elements))
+    #     return res.success(ListNode(elements))
 
-    def ifStatement(self): # If Node
-        pass
-
-    def ifStatementb(self): # If Node
-        pass
-
-    def ifStatementc(self): # If Node
-        pass
-
-    def forStatement(self):
-        pass
-
-    def whileStatement(self):
-        pass
-
-    def functionDefinition(self):
-        pass
 
     # Basic Math Operations
     # def factor(self):

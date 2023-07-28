@@ -1,0 +1,52 @@
+program        ::= statement_list
+
+statement_list ::= statement
+                  | statement statement_list
+
+statement      ::= variable_declaration
+                  | list_declaration
+                  | assignment
+                  | if_statement
+                  | else_statement
+                  | while_statement
+                  | for_statement
+                  | expression
+                  | 'return' expression ';'
+                  | 'break' ';'
+
+funct_definition ::= 'funct' 'INT|FLOAT|STRING|BOOL' identifier '(' variable_declaration ')' '{' statement_list '}'
+
+variable_declaration ::= 'INT|FLOAT|STRING|BOOL' identifier ';'
+
+list            ::= list variable_declaration ';'
+
+assignment      ::= identifier '=' expression ';'
+		  
+list_assignment ::= identifier(list) '=' '[' expression
+		  | ',' expression
+		  | ']' ';'
+          | identifier
+
+if_statement    ::= 'if' condition '{' statement_list '}'
+
+else_statement  ::=  'else' '{' statement_list '}'
+
+while_statement ::= 'while' condition '{' statement_list '}'
+
+for_statement   ::= 'for' assignment ',' condition, expression '{' statement_list '}'
+
+condition       ::= expression ('==' | '!=' | '<' | '>' | '<=' | '>=') expression
+
+expression      ::= term
+                  | expression ('+' | '-') term
+
+term            ::= factor
+                  | term ('*' | '/' | '%' | '&' | '|') factor
+
+factor          ::= identifier
+                  | number
+                  | '(' expression ')'
+
+identifier      ::= [a-zA-Z][a-zA-Z0-9]*
+
+number          ::= [0-9]+

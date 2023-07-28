@@ -72,27 +72,27 @@ TOKEN_VOID = 'VOID'
 # Comment
 TOKEN_COMMENT = 'COMMENT'
 
-# keywords = [ 'break', 'case', 'const', 'continue', 'default', 'do', 'else', 'enum', 'extern',
+# C keywords = [ 'break', 'case', 'const', 'continue', 'default', 'do', 'else', 'enum', 'extern',
 #              'for', 'printf', 'goto', 'if', 'register', 'return', 'signed', 'sizeof', 'static', 
 #              'switch', 'typedef', 'union', 'unsigned', 'volatile', 'while']
-# C Keywords
-keywords = [ 'break', 'do', 'else', 'for', 'if', 'return', 'while', 'main', "true", "false"]
+# Keywords
+keywords = [ 'return', 'break', 'if', 'else', 'for', 'while', 'main', "true", "false", "funct"]
 
-# C Comment Operators
+# Comment Operators
 comments = ['//', '/*', '*/']
 
-# C Types
-#types = [ 'auto', 'char', 'double', 'float', 'int', 'short', 'long', 'struct', 'void']
+# C Types = [ 'auto', 'char', 'double', 'float', 'int', 'short', 'long', 'struct', 'void']
+# Types
 types = [ 'bool', 'float', 'int', 'string']
 
-# C Operators
-#operators = [ '+', '-', '*', '/', '%','=', '+=', '=+', "-=", "=-", "*=", "=*", "/=", "=/", "%=", "=%", '++', "--",
+# C Operators = [ '+', '-', '*', '/', '%','=', '+=', '=+', "-=", "=-", "*=", "=*", "/=", "=/", "%=", "=%", '++', "--",
 #              '<', '>', "<=", '>=', "<<", ">>", '!', '!=', '&', '|',  '&&', '||', '^', '~', '?', ':', "()", '{}', "[]" ]
+# C Operators
 operators = [ '+', '-', '*', '/', '%','=', '<', '>', "<=", '>=', "<<", ">>", '!', '!=', '&', '|',  '&&', '||', "()", "[]" ]
 
 # C punctuations = [';', ',', '(', ')', '{', '}', '[', ']']
-# C Punctuation
-punctuations = [',', '(', ')', '[', ']']
+# Punctuation
+punctuations = [';', ',', '(', ')', '{', '}', '[', ']']
 
 class Token:
     def __init__(self, Token_Name: str, Token_Val, Token_Line: int) -> None:
