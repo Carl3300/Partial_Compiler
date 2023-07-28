@@ -58,6 +58,7 @@ TOKEN_LBRACKET = 'LBRACKET'
 TOKEN_RBRACKET = 'RBRACKET'
 
 # C Type Literals
+TOKEN_BOOLLITERAL = "BOOLLITERAL"
 TOKEN_INTLITERAL = 'INTLITERAL'
 TOKEN_FLOATLITERAL = 'FLOATLITERAL'
 TOKEN_STRLITERAL = 'STRLITERAL'
@@ -71,8 +72,11 @@ TOKEN_VOID = 'VOID'
 # Comment
 TOKEN_COMMENT = 'COMMENT'
 
+# keywords = [ 'break', 'case', 'const', 'continue', 'default', 'do', 'else', 'enum', 'extern',
+#              'for', 'printf', 'goto', 'if', 'register', 'return', 'signed', 'sizeof', 'static', 
+#              'switch', 'typedef', 'union', 'unsigned', 'volatile', 'while']
 # C Keywords
-keywords = [ 'break', 'do', 'else', 'for', 'print', 'if', 'return', 'while']
+keywords = [ 'break', 'do', 'else', 'for', 'if', 'return', 'while', 'main', "true", "false"]
 
 # C Comment Operators
 comments = ['//', '/*', '*/']
@@ -84,10 +88,11 @@ types = [ 'bool', 'float', 'int', 'string']
 # C Operators
 #operators = [ '+', '-', '*', '/', '%','=', '+=', '=+', "-=", "=-", "*=", "=*", "/=", "=/", "%=", "=%", '++', "--",
 #              '<', '>', "<=", '>=', "<<", ">>", '!', '!=', '&', '|',  '&&', '||', '^', '~', '?', ':', "()", '{}', "[]" ]
-operators = [ '+', '-', '*', '/', '%','=', '<', '>', "<=", '>=', "<<", ">>", '!', '!=', '&', '|',  '&&', '||', "()", '{}', "[]" ]
+operators = [ '+', '-', '*', '/', '%','=', '<', '>', "<=", '>=', "<<", ">>", '!', '!=', '&', '|',  '&&', '||', "()", "[]" ]
 
+# C punctuations = [';', ',', '(', ')', '{', '}', '[', ']']
 # C Punctuation
-punctuations = [';', ',', '(', ')', '{', '}', '[', ']']
+punctuations = [',', '(', ')', '[', ']']
 
 class Token:
     def __init__(self, Token_Name: str, Token_Val, Token_Line: int) -> None:
@@ -241,7 +246,10 @@ def tokenize(code):
                     word += char
                 else:
                     if word.lower() in keywords:
-                        tokens.append(Token(TOKEN_KEYWORD, word.lower() , line_number))
+                        if word.lower() in ["true", "false"]: 
+                            tokens.append(Token(TOKEN_BOOLLITERAL, word.lower() , line_number))
+                        else:
+                            tokens.append(Token(TOKEN_KEYWORD, word.lower() , line_number))
                         state = ""
                         word = ""
                     elif word.lower() in types:
@@ -328,7 +336,10 @@ def tokenize(code):
             i += 1
         if state == TOKEN_IDENTIFIER:
             if word in keywords:
-                tokens.append(Token(TOKEN_KEYWORD, word, line_number))
+                if word.lower() in ["true", "false"]: 
+                    tokens.append(Token(TOKEN_BOOLLITERAL, word.lower() , line_number))
+                else:
+                    tokens.append(Token(TOKEN_KEYWORD, word, line_number))
             elif word in types:
                 tokens.append(Token(TOKEN_TYPE, word, line_number))
             else:

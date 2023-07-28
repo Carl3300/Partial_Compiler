@@ -62,6 +62,7 @@ TOKEN_LBRACKET = 'LBRACKET'
 TOKEN_RBRACKET = 'RBRACKET'
 
 # C Type Literals
+TOKEN_BOOLLITERAL = "BOOLLITERAL"
 TOKEN_INTLITERAL = 'INTLITERAL'
 TOKEN_FLOATLITERAL = 'FLOATLITERAL'
 TOKEN_STRLITERAL = 'STRLITERAL'
@@ -85,6 +86,8 @@ class NumberNode(TypeNode):
     pass
 class StringNode(TypeNode):
     pass
+class BooleanNode(TypeNode):
+    pass
 
 # Operation Nodes
 class BinaryOpNode():
@@ -104,17 +107,18 @@ class UnaryOpNode():
 
 # Array
 class ListNode():
-    def __init__(self) -> None:
-        pass
+    def __init__(self, elements_nodes) -> None:
+        self.elements = elements_nodes
 
 # Variables Nodes
-class VariableAssignment():
-    def __init__(self) -> None:
-        pass
+class VariableAssignmentNode():
+    def __init__(self, identifierToken, valueToken) -> None:
+        self.identifierToken = identifierToken
+        self.valueToken = valueToken
 
-class VariableAccess():
-    def __init__(self) -> None:
-        pass
+class VariableAccessNode(): # this is for variable identifiers
+    def __init__(self, identifierToken) -> None:
+        self.identifierToken = identifierToken
 
 # Conditionals and loops
 class ConditionalOpNode():
@@ -134,7 +138,7 @@ class WhileNode():
         pass
 
 # Code Jumping
-class ReturnNodeOp():
+class ReturnNode():
     def __init__(self) -> None:
         pass
 
@@ -180,18 +184,35 @@ class Result:
     def __init__(self) -> None:
         self.error = None
         self.node = None
-    def register(self, res):
-        if isinstance(res, Result):
-            if res.error:
-                self.error = res.error
-            return res.node
-        return res
+        self.last_reg_adv = 0
+        self.adv_count = 0
+        self.reverse_count = 0
+
+    def reg_adv(self):
+        self.last_reg_adv= 1
+        self.adv_count += 1
+
+    def reg(self, res):
+      self.last_reg_adv = res.adv_count
+      self.adv_count += res.adv_count
+      if res.error: self.error = res.error
+      return res.node
+
+    def try_reg(self, res):
+      if res.error:
+        self.reverse_count = res.adv_count
+        return None
+      return self.register(res)
+
     def success(self, node):
-        self.node = node
-        return self
+      self.node = node
+      return self
+
     def fail(self, error):
+      if not self.error or self.last_reg_adv == 0:
         self.error = error
-        return self
+      return self
+
 
 # Parser
 class Parser:
@@ -253,9 +274,6 @@ class Parser:
     def assignment(self): # Variable nodes
         pass
 
-    def ifStatement(self): # If Node
-        pass
-
     def loopStatements(self): # loop Node Operation
         pass
 
@@ -278,8 +296,103 @@ class Parser:
         pass
 
     def atom(self): # Literals        
+        res = Result()
+        curr = self.currToken
+        if curr.type in [TOKEN_INTLITERAL, TOKEN_FLOATLITERAL]:
+            res.reg_adv()
+            self.advance()
+            return res.success(NumberNode(curr))
+
+        elif curr.type in [TOKEN_STRLITERAL]:
+            res.reg_adv()
+            self.advance()
+            return res.success(StringNode(curr))
+
+        elif curr.type in [TOKEN_BOOLLITERAL]:
+            res.reg_adv()
+            self.advance()
+            return res.success(BooleanNode(curr))
+
+        elif curr.type in [TOKEN_IDENTIFIER]:
+            res.reg_adv()
+            self.advance()
+            return res.success(VariableAccessNode(curr))
+
+        elif curr.type in [TOKEN_LPAREN]:
+            res.reg_adv()
+            self.advance()
+            expression = res.reg(self.expr())
+            if res.error:
+                return res
+            if self.currToken.type == TOKEN_RPAREN:
+                res.reg_adv()
+                self.advance()
+                return res.success(expression)
+            else:
+                return res.fail(InvalidSyntax(self.currToken.line, "Excpected a ')'"))
+        
+        elif curr.type == TOKEN_LBRACKET:
+            list_expression = res.reg(self.listExpr())
+            if res.error:
+                return res
+            return res.success(list_expression)
+
+        elif curr.type == TOKEN_KEYWORD and curr.word.lower() == "for":
+            for_expression = res.reg(self.forStatement())
+            if res.error:
+                return res
+            return res.success(for_expression)
+        
+        elif curr.type == TOKEN_KEYWORD and curr.word.lower() == "while":
+            while_expression = res.reg(self.whileStatement())
+            if res.error:
+                return res
+            return res.success(while_expression)
+
+        elif curr.type == TOKEN_KEYWORD and curr.word.lower() == "if":
+            if_expression = res.reg(self.ifStatement())
+            if res.error:
+                return res
+            return res.success(if_expression)
+        
+        elif curr.type == TOKEN_KEYWORD and curr.word.lower() == "funct":
+            funct_expression = res.reg(self.forStatement())
+            if res.error:
+                return res
+            return res.success(funct_expression)
+
+    def listExpr(self):
+        res = Result()
+        res.reg_adv()
+        self.advance()
+
+        elements = []
+        if self.currToken == TOKEN_RBRACKET:
+            res.reg_adv()
+            self.advance()
+        else:
+            elements.append(res.reg(self.expr()))
+            
+
+        return res.success(ListNode(elements))
+
+    def ifStatement(self): # If Node
         pass
 
+    def ifStatementb(self): # If Node
+        pass
+
+    def ifStatementc(self): # If Node
+        pass
+
+    def forStatement(self):
+        pass
+
+    def whileStatement(self):
+        pass
+
+    def functionDefinition(self):
+        pass
 
     # Basic Math Operations
     # def factor(self):
