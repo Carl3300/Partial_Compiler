@@ -2,7 +2,7 @@ from tokenizer import tokenize, Token
 from code_parser import ParseCode
 
 
-test_file = "testcode1.c"
+test_file = "testcode1.txt"
 
 if __name__ == "__main__":
     src = open(test_file).read().splitlines()

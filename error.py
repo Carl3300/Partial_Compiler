@@ -10,6 +10,12 @@ class InvalidSyntax(Error):
     def __init__(self, line, details) -> None:
         super().__init__("Invalid Syntax", line, details)
 
+class BlankFile():
+    def __init__(self) -> None:
+        pass
+    def __repr__(self) -> str:
+        return f"The file is either blank or only has comments"
+
 class IllegalChar(Error):
     def __init__(self, line, details) -> None:
         super().__init__("Illegal Character", line, details)

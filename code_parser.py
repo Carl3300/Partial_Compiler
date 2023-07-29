@@ -3,7 +3,8 @@ https://github.com/Carl3300/compiler_for_C/blob/main/tokenizer.py assistance fou
 """
 
 from tokenizer import Token
-from error import InvalidSyntax
+from error import BlankFile, InvalidSyntax
+
 # Token types
 TOKEN_KEYWORD = 'KEYWORD'
 TOKEN_IDENTIFIER = 'IDENTIFIER'
@@ -19,18 +20,19 @@ TOKEN_MULTIPLY = 'MULTIPLY'
 TOKEN_DIVIDE = 'DIVIDE'
 TOKEN_MOD = 'MOD'
 TOKEN_ASSIGN = 'ASSIGN'
-TOKEN_PLUSEQ = 'PLUSEQ'
-TOKEN_RPLUSEQ = 'RPLUSEQ'
-TOKEN_MINUSEQ = 'MINUSEQ'
-TOKEN_RMINUSEQ = 'RMINUSEQ'
-TOKEN_MULTIPLYEQ = 'MULTIPLYEQ'
-TOKEN_RMULTIPLYEQ = 'RMULTIPLYEQ'
-TOKEN_DIVIDEDEQ = 'DIVIDEEQ'
-TOKEN_RDIVIDEEQ = 'RDIVIDEEQ'
-TOKEN_MODEQ = 'MODEQ'
-TOKEN_RMODEQ = 'RMODEQ'
-TOKEN_PLUS1 = 'PLUS1'
-TOKEN_MINUS1 = 'MINUS1'
+TOKEN_EQ = 'EQ'
+#TOKEN_PLUSEQ = 'PLUSEQ'
+#TOKEN_RPLUSEQ = 'RPLUSEQ'
+#TOKEN_MINUSEQ = 'MINUSEQ'
+#TOKEN_RMINUSEQ = 'RMINUSEQ'
+#TOKEN_MULTIPLYEQ = 'MULTIPLYEQ'
+#TOKEN_RMULTIPLYEQ = 'RMULTIPLYEQ'
+#TOKEN_DIVIDEDEQ = 'DIVIDEEQ'
+#TOKEN_RDIVIDEEQ = 'RDIVIDEEQ'
+#TOKEN_MODEQ = 'MODEQ'
+#TOKEN_RMODEQ = 'RMODEQ'
+#TOKEN_PLUS1 = 'PLUS1'
+#TOKEN_MINUS1 = 'MINUS1'
 TOKEN_LTHAN = 'LTHAN'
 TOKEN_GTHAN = 'GTHAN'
 TOKEN_GEQ = 'GEQ'
@@ -43,10 +45,10 @@ TOKEN_BAND = 'BAND'
 TOKEN_BOR = 'BOR'
 TOKEN_AND = 'AND'
 TOKEN_OR = 'OR'
-TOKEN_XOR = 'XOR'
-TOKEN_BNOT = 'BNOT'
-TOKEN_TERNARY = 'TERNARY'
-TOKEN_COLON = 'COLON'
+#TOKEN_XOR = 'XOR'
+#TOKEN_BNOT = 'BNOT'
+#TOKEN_TERNARY = 'TERNARY'
+#TOKEN_COLON = 'COLON'
 TOKEN_PAREN = 'PAREN'
 TOKEN_CURLBRACKET = 'CURLBRACKET'
 TOKEN_BRACKET = 'BRACKET'
@@ -68,11 +70,8 @@ TOKEN_FLOATLITERAL = 'FLOATLITERAL'
 TOKEN_STRLITERAL = 'STRLITERAL'
 TOKEN_CHARLITERAL = 'CHARLITERAL'
 
-# C Types
-TOKEN_AUTO = 'AUTO'
-TOKEN_STRUCT = 'STRUCT'
-TOKEN_VOID = 'VOID'
-
+# Comment
+TOKEN_COMMENT = 'COMMENT'
 
 
 # Type Operations
@@ -119,11 +118,6 @@ class VariableAssignmentNode():
 class VariableAccessNode(): # this is for variable identifiers
     def __init__(self, identifierToken) -> None:
         self.identifierToken = identifierToken
-
-# Conditionals and loops
-class ConditionalOpNode():
-    def __init__(self) -> None:
-        pass
 
 class IfNode():
     def __init__(self) -> None:
@@ -193,25 +187,26 @@ class Result:
         self.adv_count += 1
 
     def reg(self, res):
-      self.last_reg_adv = res.adv_count
-      self.adv_count += res.adv_count
-      if res.error: self.error = res.error
-      return res.node
+        self.last_reg_adv = res.adv_count
+        self.adv_count += res.adv_count
+        if res.error: 
+            self.error = res.error
+        return res.node
 
     def try_reg(self, res):
-      if res.error:
-        self.reverse_count = res.adv_count
-        return None
-      return self.register(res)
+        if res.error:
+          self.reverse_count = res.adv_count
+          return None
+        return self.register(res)
 
     def success(self, node):
-      self.node = node
-      return self
+        self.node = node
+        return self
 
     def fail(self, error):
-      if not self.error or self.last_reg_adv == 0:
-        self.error = error
-      return self
+        if not self.error or self.last_reg_adv == 0:
+            self.error = error
+        return self
 
 
 # Parser
@@ -227,45 +222,109 @@ class Parser:
         return self.currToken
 
     def Parse(self):
-        res = self.statements()
-        if not res.error and self.currToken != TOKEN_EOF:
-          return res.failure(InvalidSyntax(self.currToken.line, "Token cannot appear after previous tokens"))
+        res = self.condition()
+        if not res.error and self.currToken.type != TOKEN_EOF:
+            return res.fail(InvalidSyntax(self.currToken.line, "Token cannot appear after previous tokens"))
         return res
 
+   # Still need global and local variables
 
-    
-
-
-
-
-
-    def functionDefinition(self):
+    def statement_list(self):
         pass
 
-    def ifStatement(self): # If Node
+    def statement(self):
+        pass
+
+    def funct_definition(self):
+        pass
+
+    def variable_declaration(self):
+        pass    
+
+    def list_declaration(self):
+        pass
+
+    def assignment(self):
+        pass
+
+    def list_assignment(self):
+        pass
+
+    def if_Statement(self):
+        pass
+
+    def elif_statement(self):
         pass
 
     def else_statement(self):
         pass
 
-    def whileStatement(self):
-        pass
+    def while_Statement(self):
+        res = Result()
+        curr = self.currToken
+        if curr.type == TOKEN_KEYWORD and curr.value == "while":
+            res.reg_adv()
+            self.advance()
+            conditonal = res.reg(self.condition)
+            if res.error:
+                return res
+            if self.currToken.type == TOKEN_LCURLBRACKET:
+                pass # FINISH TOMORROW
 
-    def forStatement(self):
+    def for_Statement(self): # do after assignment 
         pass
 
     def condition(self):
-        pass
+        res = Result()
+        left = res.reg(self.expression())
+        if res.error:
+            return res
+        if self.currToken.type in [TOKEN_EQ, TOKEN_GTHAN, TOKEN_LTHAN, TOKEN_GEQ, TOKEN_LEQ]:
+            operation_token = self.currToken
+            res.reg_adv()
+            self.advance()
+            right = res.reg(self.expression())
+            left = BinaryOpNode(left, operation_token, right)
+        return res.success(left)
 
     def expression(self): 
-        pass
+        res = Result()
+        left = res.reg(self.term())
+        if res.error:
+            return res
+        while self.currToken.type in [TOKEN_PLUS, TOKEN_MINUS]:
+            operation_token = self.currToken
+            res.reg_adv()
+            self.advance()
+            right = res.reg(self.term())
+            left = BinaryOpNode(left, operation_token, right)
+        return res.success(left)
 
     def term(self): 
-        pass
+        res = Result()
+        left = res.reg(self.factor())
+        if res.error:
+            return res
+        while self.currToken.type in [TOKEN_DIVIDE, TOKEN_MULTIPLY, TOKEN_MOD, TOKEN_BAND, TOKEN_BOR]:
+            operation_token = self.currToken
+            res.reg_adv()
+            self.advance()
+            right = res.reg(self.factor())
+            left = BinaryOpNode(left, operation_token, right)
+        return res.success(left)
 
     def factor(self): # Literals        
         res = Result()
         curr = self.currToken
+
+        if curr.type == TOKEN_MINUS:
+            res.reg_adv()
+            self.advance()
+            factor = res.reg(self.factor())
+            if res.error:
+                return res
+            return res.success(UnaryOpNode(curr, factor))
+
         if curr.type in [TOKEN_INTLITERAL, TOKEN_FLOATLITERAL]:
             res.reg_adv()
             self.advance()
@@ -289,7 +348,7 @@ class Parser:
         elif curr.type in [TOKEN_LPAREN]:
             res.reg_adv()
             self.advance()
-            expression = res.reg(self.expr())
+            expression = res.reg(self.expression())
             if res.error:
                 return res
             if self.currToken.type == TOKEN_RPAREN:
@@ -298,107 +357,10 @@ class Parser:
                 return res.success(expression)
             else:
                 return res.fail(InvalidSyntax(self.currToken.line, "Excpected a ')'"))
-        
-        # elif curr.type == TOKEN_LBRACKET:
-        #     list_expression = res.reg(self.listExpr())
-        #     if res.error:
-        #         return res
-        #     return res.success(list_expression)
-
-        # elif curr.type == TOKEN_KEYWORD and curr.word.lower() == "for":
-        #     for_expression = res.reg(self.forStatement())
-        #     if res.error:
-        #         return res
-        #     return res.success(for_expression)
-        
-        # elif curr.type == TOKEN_KEYWORD and curr.word.lower() == "while":
-        #     while_expression = res.reg(self.whileStatement())
-        #     if res.error:
-        #         return res
-        #     return res.success(while_expression)
-
-        # elif curr.type == TOKEN_KEYWORD and curr.word.lower() == "if":
-        #     if_expression = res.reg(self.ifStatement())
-        #     if res.error:
-        #         return res
-        #     return res.success(if_expression)
-        
-        # elif curr.type == TOKEN_KEYWORD and curr.word.lower() == "funct":
-        #     funct_expression = res.reg(self.forStatement())
-        #     if res.error:
-        #         return res
-        #     return res.success(funct_expression)
-
-    # def listExpr(self):
-    #     res = Result()
-    #     res.reg_adv()
-    #     self.advance()
-
-    #     elements = []
-    #     if self.currToken == TOKEN_RBRACKET:
-    #         res.reg_adv()
-    #         self.advance()
-    #     else:
-    #         elements.append(res.reg(self.expr()))
-            
-
-    #     return res.success(ListNode(elements))
-
-
-    # Basic Math Operations
-    # def factor(self):
-    #     res = Result()
-
-    #     if self.currToken.type in [TOKEN_MINUS]:
-    #         res.register(self.advance())
-    #         factor = res.register(self.factor())
-    #         if res.error:
-    #             return res
-    #         return res.success(UnaryOpNode(self.currToken, factor))
-
-    #     elif self.currToken.type in [TOKEN_LPAREN]:
-    #         res.register(self.advance())
-    #         expr = res.register(self.expr())
-    #         if res.error:
-    #             return res
-    #         if self.currToken.type in [TOKEN_RPAREN]:
-    #             res.register(self.advance())
-    #             return res.success(expr)
-    #         else:
-    #             return res.fail(InvalidSyntax(self.currToken.line, "Expected a closing ')'"))
-
-    #     elif self.currToken.type in [TOKEN_INTLITERAL, TOKEN_FLOATLITERAL]:
-    #         result = NumberNode(self.currToken)
-    #         res.register(self.advance())
-    #         return res.success(result)
-    #     return res.fail(InvalidSyntax(self.currToken.line, "Expected Integer or Float"))
-
-    # def term(self):
-    #     return self.bin_op(self.factor, (TOKEN_MULTIPLY, TOKEN_DIVIDE, TOKEN_MOD))
-
-    # def expr(self):
-    #     res = Result()
-    #     if self.currToken.type  == TOKEN_TYPE:
-    #         res.register(self.advance())
-    #         if self.currToken.type != TOKEN_IDENTIFIER:
-    #             return res.fail(InvalidSyntax(self.currToken.line, f"Expected a Name for the {self.currToken.type}"))
-    #         var_name = self.currToken
-    #         res.register(self.advance())
-    #     return self.bin_op(self.term, (TOKEN_PLUS, TOKEN_MINUS))
-
-    # def bin_op(self, func, ops):
-    #     res = Result()
-    #     left = res.register(func())
-    #     if res.error:
-    #         return res
-    #     while self.currToken.type in ops:
-    #         op_tok = self.currToken
-    #         res.register(self.advance())
-    #         right = res.register(func())
-    #         if res.error:
-    #             return res
-    #         left = BinaryOpNode(left, op_tok, right)
-    #     return res.success(left)
+        else:
+            if curr.value:
+                return res.fail(InvalidSyntax(curr.line, f"Expected (int, float, string, bool) literal or '(' but got {curr.value}"))
+            return res.fail(BlankFile())
 
 def ParseCode(tokens):
     parser = Parser(tokens)

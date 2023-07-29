@@ -15,6 +15,7 @@ TOKEN_MULTIPLY = 'MULTIPLY'
 TOKEN_DIVIDE = 'DIVIDE'
 TOKEN_MOD = 'MOD'
 TOKEN_ASSIGN = 'ASSIGN'
+TOKEN_EQ = 'EQ'
 #TOKEN_PLUSEQ = 'PLUSEQ'
 #TOKEN_RPLUSEQ = 'RPLUSEQ'
 #TOKEN_MINUSEQ = 'MINUSEQ'
@@ -64,11 +65,6 @@ TOKEN_FLOATLITERAL = 'FLOATLITERAL'
 TOKEN_STRLITERAL = 'STRLITERAL'
 TOKEN_CHARLITERAL = 'CHARLITERAL'
 
-# C Types
-TOKEN_AUTO = 'AUTO'
-TOKEN_STRUCT = 'STRUCT'
-TOKEN_VOID = 'VOID'
-
 # Comment
 TOKEN_COMMENT = 'COMMENT'
 
@@ -88,7 +84,7 @@ types = [ 'bool', 'float', 'int', 'string']
 # C Operators = [ '+', '-', '*', '/', '%','=', '+=', '=+', "-=", "=-", "*=", "=*", "/=", "=/", "%=", "=%", '++', "--",
 #              '<', '>', "<=", '>=', "<<", ">>", '!', '!=', '&', '|',  '&&', '||', '^', '~', '?', ':', "()", '{}', "[]" ]
 # C Operators
-operators = [ '+', '-', '*', '/', '%','=', '<', '>', "<=", '>=', "<<", ">>", '!', '!=', '&', '|',  '&&', '||', "()", "[]" ]
+operators = [ '+', '-', '*', '/', '%','=','==', '<', '>', "<=", '>=', "<<", ">>", '!', '!=', '&', '|',  '&&', '||', "()", "[]" ]
 
 # C punctuations = [';', ',', '(', ')', '{', '}', '[', ']']
 # Punctuation
@@ -119,6 +115,8 @@ def assignOperator(tokens, word, line_number):
         tokens.append(Token(TOKEN_MOD, word, line_number))
     elif word == '=':
         tokens.append(Token(TOKEN_ASSIGN, word, line_number))
+    elif word == '==':
+        tokens.append(Token(TOKEN_EQ, word, line_number))
 #    elif word == '+=':
 #        tokens.append(Token(TOKEN_PLUSEQ, word, line_number))
 #    elif word == '=+':
