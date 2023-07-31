@@ -1,22 +1,19 @@
-program        ::= 'program' identifier 'is' 'begin' declare_list 'endprogram' '.'
+program        ::= 'program' identifier 'is' 'begin' procedure_list 'endprogram' '.'
 
 procedure_list   ::= funct_definition
                    | main_funct_definition -> funct_def with main as the identifier
                    | variable_declaration
 
 statement_list ::= statement
-                  | statement statement_list
+                 | statement statement_list
 
 statement      ::= variable_declaration
                   | list_declaration
                   | assignment
+                  | list_assignment
                   | if_statement
-                  | else_statement
-                  | while_statement
                   | for_statement
-                  | expression
                   | 'return' expression ';'
-                  | 'break' ';'
 
 funct_definition ::= 'procedure' identifier ':' 'INT|FLOAT|STRING|BOOL'  '(' variable_declaration?
                     | ',' variable_declaration
@@ -46,7 +43,10 @@ if_statement    ::= 'if' condition 'then' statement_list
 
 else_statement  ::= 'else' statement_list
 
-*for_statement   ::= 'for' '(' variable_declaration(/w assignment) expression ')' statement_list 'endfor'
+*for_statement  ::= 'for' '(' variable_declaration(/w assignment) ';' condition ';' expression ')' statement_list 'endfor'
+
+expr_            ::= expression
+                  | condition 
 
 condition       ::= expression ('==') expression -> all types 
                   | expression ('!=' | '<' | '>' | '<=' | '>=') expression -> (BOOL|INT) & (INT|FLOAT)

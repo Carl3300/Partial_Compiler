@@ -74,7 +74,7 @@ TOKEN_COMMENT = 'COMMENT'
 #              'switch', 'typedef', 'union', 'unsigned', 'volatile', 'while']
 # Keywords
 keywords = [ 'list', 'variable', 'global', 'procedure', 'begin', 'endprocedure', "program" , "endprogram" , 'break', 'if', 
-             'then', 'else', "endif", "for", "endfor", "true", "false", "is"]
+             'then', 'else', "endif", "for", "endfor", "true", "false", "is", "return"]
 
 # Comment Operators
 comments = ['//', '/*', '*/']

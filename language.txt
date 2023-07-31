@@ -1,63 +1,18 @@
-// -- all keyword terms are case insensitve -- #
-
-// variable definition
-    int a;
-    int a = 10 | 10.23 -> will be truncated | 0
-    string b = "" | "abc"
-    bool c = true | false | 0 || !0
-    float d = 10.23 | 10 -> will be turned into float | 0.0
-    list string e = [] | ["", "abc"] -> obviously type must match type
-
-// function definition
-funct (Type(int)) Identifier (ARGS(int b) -> need to have type) {
-    int a = 6;
-    return a + b;
-}
-
-// loop definition while loop
-    int a = 5;
-    while a < 10 
-    {
-        bool b = true;
-        a = a + 1;
-    }
-
-// loop definition for loop
-    for int a = 0, a < 10, a = a + NUMBER {
-        bool b = true;
-    }
-        
-// conditionals
-    int a = 5;
-    int b = 6;
-    if a < b {
-        bool c = true;
-    }
-    else {
-        bool c = true;
-    }
-
-// main function
-    funct (type(int)) main () { -> no args for main
-        int a = 5;
-        return 0;
-    }
-
-// arithmetic
-    int a = 5 + 6 * 7 | int a = 5 & 6 + 1 | int a = 5 + 6.5 + 6 -> truncates and becomes an int | int a = b + 3;
-    string b = "hello" + " world!";
-    bool c = true| false | a == b -> replace with >=, <=, >, <, != ;
-    float d = 3.14 + 0.00159 | float d = 3 + 0.14159;
-    a = 5 + 6 + 7 -> variables can have value adjustted;
-
-// list operations
-    list int a = [];
-    a.append(1) -> this instance a[0] = 1;
-    int b = a[0] -> b equals 1;
-
 // included functions
     putBool(a); -> writes a bool to the console
     putInteger(b); -> writes a int to the console
     putFloat(c); -> writes a float to the console
     putString(d); -> writes a string to the console
     sqrt(b) -> square roots an int
+
+
+
+int main () {
+
+    if ;
+        afsdfasdf
+        adfasdfas
+        asdfasdfas
+        adfasdfasd
+    endif
+}
