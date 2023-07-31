@@ -1,7 +1,6 @@
 program        ::= 'program' identifier 'is' 'begin' procedure_list 'endprogram' '.'
 
 procedure_list   ::= funct_definition
-                   | main_funct_definition -> funct_def with main as the identifier
                    | variable_declaration
 
 statement_list ::= statement

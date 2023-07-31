@@ -271,7 +271,24 @@ class Parser:
    # Still need global and local variables
 
     def program(self):
-        pass
+        res = Result()
+        functs = []
+        variables = []
+        while self.currToken.type != TOKEN_EOF:
+            if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "procedure":
+                function_def = res.reg(self.funct_definition())
+                if res.error:
+                    return res
+                functs.append(function_def)
+            elif self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "variable":
+                var = res.reg(self.variable_declaration())
+                if res.error:
+                    return res
+                variables.append(var)
+            else:
+               return res.fail(InvalidSyntax(self.currToken.line, "Expected a variable or function declaration"))
+        return res.success()  
+                
 
     def procedure_list(self):
         pass 
