@@ -1,4 +1,8 @@
-program        ::= statement_list
+program        ::= 'program' identifier 'is' 'begin' declare_list 'endprogram' '.'
+
+procedure_list   ::= funct_definition
+                   | main_funct_definition -> funct_def with main as the identifier
+                   | variable_declaration
 
 statement_list ::= statement
                   | statement statement_list
@@ -14,40 +18,51 @@ statement      ::= variable_declaration
                   | 'return' expression ';'
                   | 'break' ';'
 
-funct_definition ::= 'funct' 'INT|FLOAT|STRING|BOOL' identifier '(' variable_declaration ')' '{' statement_list '}'
+funct_definition ::= 'procedure' identifier ':' 'INT|FLOAT|STRING|BOOL'  '(' variable_declaration?
+                    | ',' variable_declaration
+                    | ')' 'begin' statement_list 'endprocedure'
 
-variable_declaration ::= 'INT|FLOAT|STRING|BOOL' identifier ';'
+variable_declaration ::= 'variable' identifier ':' 'INT|FLOAT|STRING|BOOL' assignment? ';'
 
-list_declaration     ::= list variable_declaration ';'
+list_declaration     ::= list identifier ':' INT|FLOAT|STRING|BOOL list_assignment? ';'
 
-assignment      ::= identifier '=' expression ';'
+assignment      ::= (type)identifier? '=' expression|conditonal ';'
 		  
-list_assignment ::= identifier(list) '=' '[' expression
-		         | ',' expression
-		         | ']' ';'
-          	     | identifier
+list_assignment ::= (list)identifier? '=' identifier ';' | '[' expression
+		          | ',' expression|conditonal
+		          | ']' ';'
 
-if_statement    ::= 'if' condition '{' statement_list '}' elif_statement? | else_statement? 
+list_operators  ::= (list (int|float))identifier '[' (INTLITERAL|(int)identifier)>=0 ']' 
+                  | ('+' | '-') term
+                  | ('*' | '/') factor
 
-elif_statement  ::= 'elif' condition '{' statement_list '}' elif_statement? | else_statement? 
+i_assignment    ::= (list (type))identifier '[' (INTLITERAL|(int)identifier)>=0 ']' '='
+                  | BOOLLITERAL|INTLITERAL|FLOATLITERAL|STRLITERAL
+                  | (type)identifier
 
-else_statement  ::= 'else' '{' statement_list '}'
+if_statement    ::= 'if' condition 'then' statement_list 
+                  | else_statement? 
+                  | 'endif'
 
-while_statement ::= 'while' condition '{' statement_list '}'
+else_statement  ::= 'else' statement_list
 
-for_statement   ::= 'for' assignment condition ';' expression '{' statement_list '}'
+*for_statement   ::= 'for' '(' variable_declaration(/w assignment) expression ')' statement_list 'endfor'
 
-condition       ::= expression ('==' | '!=' | '<' | '>' | '<=' | '>=') expression
+condition       ::= expression ('==') expression -> all types 
+                  | expression ('!=' | '<' | '>' | '<=' | '>=') expression -> (BOOL|INT) & (INT|FLOAT)
+                  | BOOLLITERAL
+                  | (type)identifier
 
 expression      ::= term
-                  | expression ('+' | '-') term
+                  | expression ('+' | '-') term -> ints and floats(truncate when int)
 
 term            ::= factor
-                  | term ('*' | '/' | '%' | '&' | '|') factor
+                  | term ('*' | '/') factor -> int and floats(truncate when int)
+                  | term ('&' | '|') factor -> int
 
 factor          ::= identifier
-                  | number
-                  | -number
+                  | -INTLITERAL|-FLOATLITERAL
+                  | BOOLLITERAL|INTLITERAL|FLOATLITERAL|STRLITERAL
                   | '(' expression ')'
 
 identifier      ::= [a-zA-Z][a-zA-Z0-9]*

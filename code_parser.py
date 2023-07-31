@@ -48,7 +48,7 @@ TOKEN_OR = 'OR'
 #TOKEN_XOR = 'XOR'
 #TOKEN_BNOT = 'BNOT'
 #TOKEN_TERNARY = 'TERNARY'
-#TOKEN_COLON = 'COLON'
+TOKEN_COLON = 'COLON'
 TOKEN_PAREN = 'PAREN'
 TOKEN_CURLBRACKET = 'CURLBRACKET'
 TOKEN_BRACKET = 'BRACKET'
@@ -62,6 +62,7 @@ TOKEN_LCURLBRACKET = 'LCURLBRACKET'
 TOKEN_RCURLBRACKET = 'RCURLBRACKET'
 TOKEN_LBRACKET = 'LBRACKET'
 TOKEN_RBRACKET = 'RBRACKET'
+TOKEN_PERIOD = "PERIOD"
 
 # C Type Literals
 TOKEN_BOOLLITERAL = "BOOLLITERAL"
@@ -106,37 +107,55 @@ class UnaryOpNode():
 
 # Array
 class ListNode():
-    def __init__(self, elements_nodes) -> None:
+    def __init__(self, type_, elements_nodes) -> None:
         self.elements = elements_nodes
+        self.type = type_
+    def __repr__(self) -> str:
+        return f"{self.elements}"
 
 # Variables Nodes
 class VariableAssignmentNode():
-    def __init__(self, identifierToken, valueToken) -> None:
+    def __init__(self, type_, identifierToken, valueToken=None, isList=False,) -> None:
         self.identifierToken = identifierToken
+        self.type = type_
+        self.isList = isList
         self.valueToken = valueToken
+    def __repr__(self) -> str:
+        if self.isList:
+            return f"List: {self.type}, {self.valueToken}"
+        return f"{self.type}: {self.valueToken}"
 
 class VariableAccessNode(): # this is for variable identifiers
     def __init__(self, identifierToken) -> None:
         self.identifierToken = identifierToken
 
 class IfNode():
-    def __init__(self) -> None:
-        pass
+    def __init__(self, conditional, body, otherNodes) -> None:
+        self.conditional = conditional
+        self.body = body
+        self.otherNodes = otherNodes
+    def __repr__(self) -> str:
+        if self.otherNodes:
+            return f"IF: {self.conditional}: {self.body}, {self.otherNodes}"
+        return f"IF: {self.conditional}: {self.body}"
+
+class ElifNode():
+    def __init__(self, conditional, body, otherNodes) -> None:
+        self.conditional = conditional
+        self.body = body
+        self.otherNodes = otherNodes
+    def __repr__(self) -> str:
+        if self.otherNodes:
+            return f"ELIF: {self.conditional}: {self.body}, {self.otherNodes}"
+        return f"ELIF: {self.conditional}: {self.body}"
+
+class ElseNode():
+    def __init__(self, body) -> None:
+        self.body = body
+    def __repr__(self) -> str:
+        return f"Else: {self.body}"
 
 class ForNode():
-    def __init__(self) -> None:
-        pass
-
-class WhileNode():
-    def __init__(self) -> None:
-        pass
-
-# Code Jumping
-class ReturnNode():
-    def __init__(self) -> None:
-        pass
-
-class BreakNode():
     def __init__(self) -> None:
         pass
 
@@ -146,6 +165,13 @@ class FunctionDefinitionNode():
         pass
 
 
+
+# class WhileNode():
+#     def __init__(self, conditional, body) -> None:
+#         self.conditional = conditional
+#         self.body = body
+#     def __repr__(self) -> str:
+#         return f"while: {self.conditional}: {self.body}"
 
 # class IdentifierNode():
 #     def __init__(self, name):
@@ -222,15 +248,24 @@ class Parser:
         return self.currToken
 
     def Parse(self):
-        res = self.condition()
+        res = self.variable_declaration()
         if not res.error and self.currToken.type != TOKEN_EOF:
-            return res.fail(InvalidSyntax(self.currToken.line, "Token cannot appear after previous tokens"))
+            return res.fail(InvalidSyntax(self.currToken.line, f"'{self.currToken.value}' Token out of proper context"))
         return res
 
    # Still need global and local variables
 
-    def statement_list(self):
+    def program(self):
         pass
+
+    def procedure_list(self):
+        pass 
+
+    def statement_list(self):
+        res = Result()
+        res.reg_adv()
+        self.advance()
+        return res.success(FunctionDefinitionNode())
 
     def statement(self):
         pass
@@ -238,44 +273,219 @@ class Parser:
     def funct_definition(self):
         pass
 
-    def variable_declaration(self):
-        pass    
-
-    def list_declaration(self):
-        pass
-
-    def assignment(self):
-        pass
-
-    def list_assignment(self):
-        pass
-
-    def if_Statement(self):
-        pass
-
-    def elif_statement(self):
-        pass
-
-    def else_statement(self):
-        pass
-
-    def while_Statement(self):
+    def variable_declaration(self, needAssignment=False):
         res = Result()
         curr = self.currToken
-        if curr.type == TOKEN_KEYWORD and curr.value == "while":
+        if curr.type == TOKEN_KEYWORD and curr.value == "variable":
             res.reg_adv()
             self.advance()
-            conditonal = res.reg(self.condition)
+            if self.currToken.type == TOKEN_IDENTIFIER:
+                identifier = self.currToken.value
+                res.reg_adv()
+                self.advance()
+                if self.currToken.type == TOKEN_COLON:
+                    res.reg_adv()
+                    self.advance()
+                    if self.currToken.type == TOKEN_TYPE:
+                        type_ = self.currToken.value
+                        res.reg_adv()
+                        self.advance()
+                        if self.currToken.type == TOKEN_ASSIGN:
+                            expression = res.reg(self.assignment(type_))
+                            if res.error:
+                                return res
+                            return res.success(VariableAssignmentNode(type_, identifier, expression, False))
+                        elif self.currToken.type == TOKEN_SEMI:
+                            res.reg_adv()
+                            self.advance()
+                            return res.success(VariableAssignmentNode(type_, identifier, None, False))
+                        else:
+                            return res.fail(InvalidSyntax(self.currToken.line, "Expected a ';'"))
+                    else:
+                        return res.fail(InvalidSyntax(self.currToken.line, "Expected a (INTEGER|FLOAT|STRING|BOOL) type for the list"))
+                else:
+                    return res.fail((InvalidSyntax(self.currToken.line, "Expected a ':'")))
+            else:
+                return res.fail(InvalidSyntax(self.currToken.line, "Expected an identifier for the list"))
+        else:
+            return res.fail(InvalidSyntax(curr.line, "Expected the variable keyword"))   
+
+    def list_declaration(self):
+        res = Result()
+        curr = self.currToken
+        if curr.type == TOKEN_KEYWORD and curr.value == "list":
+            res.reg_adv()
+            self.advance()
+            if self.currToken.type == TOKEN_IDENTIFIER:
+                identifier = self.currToken.value
+                res.reg_adv()
+                self.advance()
+                if self.currToken.type == TOKEN_COLON:
+                    res.reg_adv()
+                    self.advance()
+                    if self.currToken.type == TOKEN_TYPE:
+                        type_ = self.currToken.value
+                        res.reg_adv()
+                        self.advance()
+                        if self.currToken.type == TOKEN_ASSIGN:
+                            listNodes = res.reg(self.list_assignment(type_))
+                            if res.error:
+                                return res
+                            return res.success(VariableAssignmentNode(type_, identifier, listNodes, True))
+                        elif self.currToken.type == TOKEN_SEMI:
+                            res.reg_adv()
+                            self.advance()
+                            return res.success(VariableAssignmentNode(type_, identifier, None, True))
+                        else:
+                            return res.fail(InvalidSyntax(self.currToken.line, "Expected a ';'"))
+                    else:
+                        return res.fail(InvalidSyntax(self.currToken.line, "Expected a (INTEGER|FLOAT|STRING|BOOL) type for the list"))
+                else:
+                    return res.fail((InvalidSyntax(self.currToken.line, "Expected a ':'")))
+            else:
+                return res.fail(InvalidSyntax(self.currToken.line, "Expected an identifier for the list"))
+        else:
+            return res.fail(InvalidSyntax(curr.line, "Expected the list keyword"))
+
+    def assignment(self, type_):
+        res = Result()
+        if self.currToken.type == TOKEN_IDENTIFIER:
+            pass
+        if self.currToken.type == TOKEN_ASSIGN:
+            res.reg_adv()
+            self.advance()
+            expression = res.reg(self.condition())
             if res.error:
                 return res
-            if self.currToken.type == TOKEN_LCURLBRACKET:
-                pass # FINISH TOMORROW
+            if self.currToken.type == TOKEN_SEMI:
+                res.reg_adv()
+                self.advance()
+                return res.success(expression)
+            else:
+               return res.fail(InvalidSyntax(self.currToken.line, "Expected an ';'"))
+        else: 
+            return res.fail(InvalidSyntax(self.currToken.line, "Expected an '=' for list assignment"))
+
+
+    def list_assignment(self, type_):
+        res = Result()
+        if self.currToken.type == TOKEN_IDENTIFIER:
+            pass
+        if self.currToken.type == TOKEN_ASSIGN:
+            res.reg_adv()
+            self.advance()
+            if self.currToken.type == TOKEN_IDENTIFIER:
+                res.reg_adv()
+                self.advance()
+                pass # still needs to be type checked
+                if self.currToken.type == TOKEN_SEMI:
+                    res.reg_adv()
+                    self.advance()
+                    return res.success(ListNode(type_, expressions))
+                else:
+                    return res.fail(InvalidSyntax(self.currToken.line, "Expected an ';'"))
+            if self.currToken.type == TOKEN_LBRACKET:
+                res.reg_adv()
+                self.advance()
+                expressions = []
+                expressions.append(res.reg(self.condition()))
+                if res.error:
+                    return res
+                while self.currToken.type == TOKEN_COMMA:
+                    res.reg_adv()
+                    self.advance()
+                    expressions.append(res.reg(self.condition()))
+                if self.currToken.type == TOKEN_RBRACKET:
+                    res.reg_adv()
+                    self.advance()
+                    if self.currToken.type == TOKEN_SEMI:
+                        res.reg_adv()
+                        self.advance()
+                        return res.success(ListNode(type_, expressions))
+                    else:
+                        return res.fail(InvalidSyntax(self.currToken.line, "Expected an ';'"))
+                else:
+                    return res.fail(InvalidSyntax(self.currToken.line, f"Expected an ']' but got a '{self.currToken.value}'"))
+            else:
+                return res.fail(InvalidSyntax(self.currToken.line, "Expected a list declaration or variable"))
+        else: 
+            return res.fail(InvalidSyntax(self.currToken.line, "Expected an '=' for list assignment"))
+
+    def if_Statement(self):
+        res = Result()
+        curr = self.currToken
+        if curr.type == TOKEN_KEYWORD and curr.value == "if":
+            res.reg_adv()
+            self.advance()
+            conditional = res.reg(self.condition())
+            if res.error:
+                return res
+            if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == 'then':
+                statements = res.reg(self.statement_list())
+                if res.error:
+                    return res
+                otherNodes = None
+                if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "else":
+                    otherNodes = res.reg(self.else_statement())
+                    if res.error:
+                        return res
+                if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "endif":
+                    return res.success(IfNode(conditional, statements, otherNodes))
+                else:
+                    return res.fail(InvalidSyntax(self.currToken.line, "Expected keyword endif"))
+            else:
+                return res.fail(InvalidSyntax(self.currToken.line, "Expected keyword then"))
+        else:
+            return res.fail(InvalidSyntax(curr.line, "Expected the if keyword"))
+
+    def else_statement(self):
+        res = Result()
+        curr = self.currToken
+        if curr.type == TOKEN_KEYWORD and curr.value == "else":
+            res.reg_adv()
+            self.advance()
+            statements = res.reg(self.statement_list())
+            if res.error:
+                return res
+            return res.success(ElseNode(statements))
+        else: 
+            return res.fail(InvalidSyntax(curr.line, "Expected the else keyword"))
 
     def for_Statement(self): # do after assignment 
-        pass
+        res = Result()
+        curr = self.currToken
+        if curr.type == TOKEN_KEYWORD and curr.value == "for":
+            res.reg_adv()
+            self.advance()
+            if self.currToken.type == TOKEN_TYPE:
+               var = res.reg(self.variable_declaration())
+               if res.error:
+                   return res
+            elif self.currToken.type == TOKEN_IDENTIFIER:
+                var = res.reg(self.assignment())
+                if res.error:
+                   return res
+            else:
+                return res.fail(InvalidSyntax(self.currToken.line, "Expected value assignment"))
+            if self.currToken.type == TOKEN_SEMI:
+                pass
+        else:
+            return res.fail(InvalidSyntax(curr.line, "Expected the for keyword"))
+
 
     def condition(self):
         res = Result()
+        curr = self.currToken
+        if curr.type == TOKEN_BOOLLITERAL:
+            res.reg_adv()
+            self.advance()
+            return res.success(BooleanNode(curr))
+        elif curr.type == TOKEN_IDENTIFIER:
+            res.reg_adv()
+            self.advance()
+            pass
+            # NEED TO CHECK TYPE 
+
         left = res.reg(self.expression())
         if res.error:
             return res
@@ -285,6 +495,8 @@ class Parser:
             self.advance()
             right = res.reg(self.expression())
             left = BinaryOpNode(left, operation_token, right)
+        else:
+            return res.fail(InvalidSyntax(self.currToken.line, "Expected a Conditional Statement"))
         return res.success(left)
 
     def expression(self): 
@@ -305,7 +517,7 @@ class Parser:
         left = res.reg(self.factor())
         if res.error:
             return res
-        while self.currToken.type in [TOKEN_DIVIDE, TOKEN_MULTIPLY, TOKEN_MOD, TOKEN_BAND, TOKEN_BOR]:
+        while self.currToken.type in [TOKEN_DIVIDE, TOKEN_MULTIPLY, TOKEN_BAND, TOKEN_BOR]:
             operation_token = self.currToken
             res.reg_adv()
             self.advance()
@@ -359,7 +571,7 @@ class Parser:
                 return res.fail(InvalidSyntax(self.currToken.line, "Excpected a ')'"))
         else:
             if curr.value:
-                return res.fail(InvalidSyntax(curr.line, f"Expected (int, float, string, bool) literal or '(' but got {curr.value}"))
+                return res.fail(InvalidSyntax(curr.line, f"Expected (INTEGER, FLOAT, STRING, BOOL) literal or '(' but got {curr.value}"))
             return res.fail(BlankFile())
 
 def ParseCode(tokens):

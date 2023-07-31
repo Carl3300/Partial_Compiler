@@ -43,7 +43,7 @@ TOKEN_OR = 'OR'
 #TOKEN_XOR = 'XOR'
 #TOKEN_BNOT = 'BNOT'
 #TOKEN_TERNARY = 'TERNARY'
-#TOKEN_COLON = 'COLON'
+TOKEN_COLON = 'COLON'
 TOKEN_PAREN = 'PAREN'
 TOKEN_CURLBRACKET = 'CURLBRACKET'
 TOKEN_BRACKET = 'BRACKET'
@@ -57,6 +57,7 @@ TOKEN_LCURLBRACKET = 'LCURLBRACKET'
 TOKEN_RCURLBRACKET = 'RCURLBRACKET'
 TOKEN_LBRACKET = 'LBRACKET'
 TOKEN_RBRACKET = 'RBRACKET'
+TOKEN_PERIOD = "PERIOD"
 
 # C Type Literals
 TOKEN_BOOLLITERAL = "BOOLLITERAL"
@@ -72,23 +73,24 @@ TOKEN_COMMENT = 'COMMENT'
 #              'for', 'printf', 'goto', 'if', 'register', 'return', 'signed', 'sizeof', 'static', 
 #              'switch', 'typedef', 'union', 'unsigned', 'volatile', 'while']
 # Keywords
-keywords = [ 'return', 'break', 'if', 'else', 'for', 'while', 'main', "true", "false", "funct"]
+keywords = [ 'list', 'variable', 'global', 'procedure', 'begin', 'endprocedure', "program" , "endprogram" , 'break', 'if', 
+             'then', 'else', "endif", "for", "endfor", "true", "false", "is"]
 
 # Comment Operators
 comments = ['//', '/*', '*/']
 
 # C Types = [ 'auto', 'char', 'double', 'float', 'int', 'short', 'long', 'struct', 'void']
 # Types
-types = [ 'bool', 'float', 'int', 'string']
+types = [ 'bool', 'float', 'integer', 'string']
 
 # C Operators = [ '+', '-', '*', '/', '%','=', '+=', '=+', "-=", "=-", "*=", "=*", "/=", "=/", "%=", "=%", '++', "--",
 #              '<', '>', "<=", '>=', "<<", ">>", '!', '!=', '&', '|',  '&&', '||', '^', '~', '?', ':', "()", '{}', "[]" ]
 # C Operators
-operators = [ '+', '-', '*', '/', '%','=','==', '<', '>', "<=", '>=', "<<", ">>", '!', '!=', '&', '|',  '&&', '||', "()", "[]" ]
+operators = [ '+', '-', '*', '/', '%','=','==', ':', '<', '>', "<=", '>=', "<<", ">>", '!', '!=', '&', '|',  '&&', '||', "()", "[]"]
 
 # C punctuations = [';', ',', '(', ')', '{', '}', '[', ']']
 # Punctuation
-punctuations = [';', ',', '(', ')', '{', '}', '[', ']']
+punctuations = [';', ',', '(', ')', '{', '}', '[', ']', "."]
 
 class Token:
     def __init__(self, Token_Name: str, Token_Val, Token_Line: int) -> None:
@@ -117,6 +119,8 @@ def assignOperator(tokens, word, line_number):
         tokens.append(Token(TOKEN_ASSIGN, word, line_number))
     elif word == '==':
         tokens.append(Token(TOKEN_EQ, word, line_number))
+    elif word == ':':
+        tokens.append(Token(TOKEN_COLON, word, line_number))
 #    elif word == '+=':
 #        tokens.append(Token(TOKEN_PLUSEQ, word, line_number))
 #    elif word == '=+':
@@ -200,6 +204,8 @@ def assignPunctutation(tokens, word, line_number):
         tokens.append(Token(TOKEN_LBRACKET, word, line_number)) 
     elif word == ']':
         tokens.append(Token(TOKEN_RBRACKET, word, line_number))
+    elif word == '.':
+        tokens.append(Token(TOKEN_PERIOD, word, line_number))
     else:
         tokens.append(Token(TOKEN_PUNCTUATION, word, line_number))
     return tokens
@@ -337,11 +343,11 @@ def tokenize(code):
                 if word.lower() in ["true", "false"]: 
                     tokens.append(Token(TOKEN_BOOLLITERAL, word.lower() , line_number))
                 else:
-                    tokens.append(Token(TOKEN_KEYWORD, word, line_number))
+                    tokens.append(Token(TOKEN_KEYWORD, word.lower(), line_number))
             elif word in types:
-                tokens.append(Token(TOKEN_TYPE, word, line_number))
+                tokens.append(Token(TOKEN_TYPE, word.lower(), line_number))
             else:
-                tokens.append(Token(TOKEN_IDENTIFIER, word, line_number))
+                tokens.append(Token(TOKEN_IDENTIFIER, word.lower(), line_number))
         elif state == TOKEN_CHARLITERAL or state == TOKEN_STRLITERAL:
             tokens.append(Token(TOKEN_STRLITERAL, word, line_number))   
             state = ""
