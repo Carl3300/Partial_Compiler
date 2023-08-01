@@ -348,6 +348,7 @@ def tokenize(code):
                 tokens.append(Token(TOKEN_TYPE, word.lower(), line_number))
             else:
                 tokens.append(Token(TOKEN_IDENTIFIER, word.lower(), line_number))
+            state = ""
         elif state == TOKEN_CHARLITERAL or state == TOKEN_STRLITERAL:
             tokens.append(Token(TOKEN_STRLITERAL, word, line_number))   
             state = ""

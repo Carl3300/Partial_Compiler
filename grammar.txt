@@ -50,7 +50,7 @@ expr_            ::= expression
 condition       ::= expression ('==') expression -> all types 
                   | expression ('!=' | '<' | '>' | '<=' | '>=') expression -> (BOOL|INT) & (INT|FLOAT)
                   | BOOLLITERAL
-                  | (type)identifier
+                  | (bool)identifier
 
 expression      ::= term
                   | expression ('+' | '-') term -> ints and floats(truncate when int)

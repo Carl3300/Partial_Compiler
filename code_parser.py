@@ -177,7 +177,12 @@ class ReturnNode():
     def __repr__(self) -> str:
         return f"{self.expression}"
 
-
+class programNode():
+    def __init__(self, functions, globalVariables) -> None:
+        self.functions = functions
+        self.globalvars = globalVariables
+    def __repr__(self) -> str:
+        return f"{self.functions}: {self.globalvars}"
 
 # class WhileNode():
 #     def __init__(self, conditional, body) -> None:
@@ -185,28 +190,6 @@ class ReturnNode():
 #         self.body = body
 #     def __repr__(self) -> str:
 #         return f"while: {self.conditional}: {self.body}"
-
-# class IdentifierNode():
-#     def __init__(self, name):
-#         self.name = name
-
-# class IntegerLiteralNode:
-#     def __init__(self, value):
-#         self.value = value
-
-# # Conditional Nodes
-# class IfElseNode():
-#     def __init__(self, condition, if_block, else_block):
-#         self.condition = condition
-#         self.if_block = if_block
-#         self.else_block = else_block
-
-# # Loop Nodes
-# class WhileLoopNode():
-#     def __init__(self, condition, body):
-#         self.condition = condition
-#         self.body = body
-
 # # Function Nodes
 # class FunctionCallNode():
 #     def __init__(self, name, arguments):
@@ -247,7 +230,7 @@ class Result:
             self.error = error
         return self
 
-
+# Still need global and local variables pass
 # Parser
 class Parser:
     def __init__(self, tokens) -> None:
@@ -268,13 +251,49 @@ class Parser:
             return res.fail(InvalidSyntax(self.currToken.line, f"'{self.currToken.value}' Token out of proper context"))
         return res
 
-   # Still need global and local variables
-
     def program(self):
+        res = Result()
+        if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "program":
+            res.reg_adv()
+            self.advance()
+            if self.currToken.type == TOKEN_IDENTIFIER:
+                res.reg_adv()
+                self.advance()
+                if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "is":
+                    res.reg_adv()
+                    self.advance()
+                    if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "begin":
+                        res.reg_adv()
+                        self.advance()
+                        procedure_list = res.reg(self.procedure_list())
+                        if res.error:
+                            return res
+                        if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "endprogram":
+                            res.reg_adv()
+                            self.advance()
+                            if self.currToken.type == TOKEN_PERIOD:
+                                res.reg_adv()
+                                self.advance()
+                                return res.success(procedure_list)
+                            else:
+                                return res.fail(InvalidSyntax(self.currToken.line, "A program must end with a '.'"))
+                        else:
+                            return res.fail(InvalidSyntax(self.currToken.line, "A program must have 'endprogram' keyword after procedure_list"))
+                    else:
+                         return res.fail(InvalidSyntax(self.currToken.line, "A program must have 'begin' after the 'is' keyword"))
+                else:
+                    return res.fail(InvalidSyntax(self.currToken.line, "A program must have 'is' after the name identifier"))
+            else:
+                return res.fail(InvalidSyntax(self.currToken.line, "A program must have a name identifier"))
+        else:
+            return res.fail(InvalidSyntax(self.currToken.line, "A program must start with the program keyword"))
+                
+
+    def procedure_list(self):
         res = Result()
         functs = []
         variables = []
-        while self.currToken.type != TOKEN_EOF:
+        while not (self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "endprogram"):
             if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "procedure":
                 function_def = res.reg(self.funct_definition())
                 if res.error:
@@ -286,24 +305,22 @@ class Parser:
                     return res
                 variables.append(var)
             else:
+               if self.currToken.type == TOKEN_EOF:
+                   return res.fail(InvalidSyntax(self.currToken.line, "Expected keyword endprogram after the procedure list"))
                return res.fail(InvalidSyntax(self.currToken.line, "Expected a variable or function declaration"))
-        return res.success()  
-                
-
-    def procedure_list(self):
-        pass 
+        return res.success(programNode(functs, variables))  
 
     def statement_list(self, terminator):
         res = Result()
         statements = []
         while not(self.currToken.type == TOKEN_KEYWORD and self.currToken.value in terminator):
-            statement = res.reg(self.statement())
+            statement = res.reg(self.statement(terminator))
             if res.error:
                 return res
             statements.append(statement)
         return res.success(ListNode("Statements", statements))
 
-    def statement(self):
+    def statement(self, terminator):
         res = Result()
         curr = self.currToken
         pass # I need to fix this so that advance works with it and all other types might be 
@@ -349,10 +366,85 @@ class Parser:
                 self.advance()
                 return res.success(ReturnNode(expression))
         else:
-            return res.fail(InvalidSyntax(curr.line, "Invalid Statement declaration"))   
+            return res.fail(InvalidSyntax(curr.line, f"Invalid Statement declaration expected a {terminator} to end statements"))   
 
     def funct_definition(self):
-        pass
+        pass # need to change around the variables
+        res = Result()
+        if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "procedure":
+            res.reg_adv()
+            self.advance()
+            if self.currToken.type == TOKEN_IDENTIFIER:
+                identifier = self.currToken.value
+                res.reg_adv()
+                self.advance()
+                if self.currToken.type == TOKEN_COLON:
+                    res.reg_adv()
+                    self.advance()
+                    if self.currToken.type == TOKEN_TYPE:
+                        type_ = self.currToken.value
+                        res.reg_adv()
+                        self.advance()
+                        if self.currToken.type == TOKEN_LPAREN:
+                            res.reg_adv()
+                            self.advance()
+                            if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "variable":
+                                variables = []
+                                var = res.reg(self.variable_declaration())
+                                variables.append(var)
+                                if res.error:
+                                    return res
+                                while self.currToken.type == TOKEN_COMMA:
+                                    var = res.reg(self.variable_declaration())
+                                    variables.append(var)
+                                    if res.error:
+                                        return res
+                                if self.currToken.type == TOKEN_RPAREN:
+                                    res.reg_adv()
+                                    self.advance()
+                                    if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "begin":
+                                        res.reg_adv()
+                                        self.advance()
+                                        statement_list = res.reg(self.statement_list("endprocedure"))
+                                        if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "endprocedure":
+                                            res.reg_adv()
+                                            self.advance()
+                                            pass
+                                            return res.success() # make this acutally return
+                                        else:
+                                            return res.fail(InvalidSyntax(self.currToken.line, "Expected the 'endprocedure' keyword"))
+                                    else:
+                                        return res.fail(InvalidSyntax(self.currToken.line, "Expected the 'begin' keyword"))
+                                else:
+                                    return res.fail(InvalidSyntax(self.currToken.line, "Expected a ')"))
+                            elif self.currToken.type == TOKEN_RPAREN:
+                                res.reg_adv()
+                                self.advance()
+                                if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "begin":
+                                    res.reg_adv()
+                                    self.advance()
+                                    statement_list = res.reg(self.statement_list("endprocedure"))
+                                    if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "endprocedure":
+                                        res.reg_adv()
+                                        self.advance()
+                                        pass
+                                        return res.success() # make this acutally return
+                                    else:
+                                        return res.fail(InvalidSyntax(self.currToken.line, "Expected the 'endprocedure' keyword"))
+                                else:
+                                    return res.fail(InvalidSyntax(self.currToken.line, "Expected the 'begin' keyword"))
+                            else:
+                                return res.fail(InvalidSyntax(self.currToken.line, "Expected a ')"))
+                        else:
+                            return res.fail(InvalidSyntax(self.currToken.line, "Expected a '('"))
+                    else:
+                         return res.fail(InvalidSyntax(self.currToken.line, "A function must have type assignment after the ':' keyword"))
+                else:
+                    return res.fail(InvalidSyntax(self.currToken.line, "A function must have ':' after the name identifier"))
+            else:
+                return res.fail(InvalidSyntax(self.currToken.line, "A function must have a name identifier"))
+        else:
+            return res.fail(InvalidSyntax(self.currToken.line, "A function must start with the procedure keyword"))
 
     def list_operators(self):
         pass
@@ -466,7 +558,7 @@ class Parser:
             if self.currToken.type == TOKEN_IDENTIFIER:
                 res.reg_adv()
                 self.advance()
-                pass # still needs to be type checked
+                pass # still needs to be type checked - semantics checker
                 if self.currToken.type == TOKEN_SEMI:
                     res.reg_adv()
                     self.advance()
@@ -593,17 +685,6 @@ class Parser:
     def condition(self):
         res = Result()
         curr = self.currToken
-        if curr.type == TOKEN_BOOLLITERAL:
-            res.reg_adv()
-            self.advance()
-            return res.success(BooleanNode(curr))
-        # elif curr.type == TOKEN_IDENTIFIER:
-        #     res.reg_adv()
-        #     self.advance()
-        #     pass
-        #     # NEED TO CHECK TYPE
-        # whenever a identifier is used a var access can be called and the code generator can handle it 
-
         left = res.reg(self.expression())
         if res.error:
             return res
@@ -613,8 +694,6 @@ class Parser:
             self.advance()
             right = res.reg(self.expression())
             left = BinaryOpNode(left, operation_token, right)
-        else:
-            return res.fail(InvalidSyntax(self.currToken.line, "Expected a Conditional Statement"))
         return res.success(left)
 
     def expression(self): 

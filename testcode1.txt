@@ -1,4 +1,4 @@
-for ( variable a: integer = 5; a == 6; a + 1;)
-    
-
-endfor
+program test is begin
+variable a: integer = 5;
+variable b: integer = 5;
+endprogram.
