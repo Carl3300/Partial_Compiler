@@ -170,6 +170,8 @@ class ForNode():
 class FunctionDefinitionNode():
     def __init__(self) -> None:
         pass
+    def __repr__(self) -> str:
+        return "THIS IS A FUNCTION"
 
 class ReturnNode():
     def __init__(self, expression) -> None:
@@ -410,7 +412,7 @@ class Parser:
                                             res.reg_adv()
                                             self.advance()
                                             pass
-                                            return res.success() # make this acutally return
+                                            return res.success(FunctionDefinitionNode()) # make this acutally return
                                         else:
                                             return res.fail(InvalidSyntax(self.currToken.line, "Expected the 'endprocedure' keyword"))
                                     else:
@@ -428,7 +430,7 @@ class Parser:
                                         res.reg_adv()
                                         self.advance()
                                         pass
-                                        return res.success() # make this acutally return
+                                        return res.success(FunctionDefinitionNode()) # make this acutally return
                                     else:
                                         return res.fail(InvalidSyntax(self.currToken.line, "Expected the 'endprocedure' keyword"))
                                 else:
@@ -684,7 +686,6 @@ class Parser:
 
     def condition(self):
         res = Result()
-        curr = self.currToken
         left = res.reg(self.expression())
         if res.error:
             return res

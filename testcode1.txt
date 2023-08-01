@@ -1,4 +1,16 @@
 program test is begin
-variable a: integer = 5;
-variable b: integer = 5;
+    variable a: integer = 5;
+    variable b: integer = 5;
+
+    procedure notmain : integer () 
+    begin
+        for (variable d: integer = 5; b < 6; b = b + 1;)
+            variable e: integer = 5;
+        endfor
+    endprocedure
+
+    procedure main : integer () 
+    begin
+        variable c: integer = 5;
+    endprocedure
 endprogram.
