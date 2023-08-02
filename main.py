@@ -3,7 +3,7 @@ from code_parser import ParseCode
 
 TOKEN_OPERATOR = 'OPERATOR'
 TOKEN_PUNCTUATION = 'PUNCTUATION'
-TEST_FILE = "testcode1.txt"
+TEST_FILE = "./testPgms/correct/math.src"
 
 if __name__ == "__main__":
     src = open(TEST_FILE).read().splitlines()

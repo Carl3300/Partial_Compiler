@@ -73,8 +73,8 @@ TOKEN_COMMENT = 'COMMENT'
 #              'for', 'printf', 'goto', 'if', 'register', 'return', 'signed', 'sizeof', 'static', 
 #              'switch', 'typedef', 'union', 'unsigned', 'volatile', 'while']
 # Keywords
-keywords = [ 'list', 'variable', 'global', 'procedure', 'begin', 'endprocedure', "program" , "endprogram" , 'break', 'if', 
-             'then', 'else', "endif", "for", "endfor", "true", "false", "is", "return"]
+keywords = [ 'list', 'variable', 'global', 'procedure', 'begin', 'end', "program" , 'break', 'if', 
+             'then', 'else', "for", "true", "false", "is", "return"]
 
 # Comment Operators
 comments = ['//', '/*', '*/']
@@ -86,7 +86,7 @@ types = [ 'bool', 'float', 'integer', 'string']
 # C Operators = [ '+', '-', '*', '/', '%','=', '+=', '=+', "-=", "=-", "*=", "=*", "/=", "=/", "%=", "=%", '++', "--",
 #              '<', '>', "<=", '>=', "<<", ">>", '!', '!=', '&', '|',  '&&', '||', '^', '~', '?', ':', "()", '{}', "[]" ]
 # C Operators
-operators = [ '+', '-', '*', '/', '%','=','==', ':', '<', '>', "<=", '>=', "<<", ">>", '!', '!=', '&', '|',  '&&', '||', "[]"]
+operators = [ '+', '-', '*', '/', '%', '=',':=','==', ':', '<', '>', "<=", '>=', "<<", ">>", '!', '!=', '&', '|',  '&&', '||', "[]"]
 
 # C punctuations = [';', ',', '(', ')', '{', '}', '[', ']']
 # Punctuation
@@ -115,7 +115,7 @@ def assignOperator(tokens, word, line_number):
         tokens.append(Token(TOKEN_DIVIDE, word, line_number))
     elif word == '%':
         tokens.append(Token(TOKEN_MOD, word, line_number))
-    elif word == '=':
+    elif word == ':=':
         tokens.append(Token(TOKEN_ASSIGN, word, line_number))
     elif word == '==':
         tokens.append(Token(TOKEN_EQ, word, line_number))

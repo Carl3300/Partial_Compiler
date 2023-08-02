@@ -1,30 +1,34 @@
-program        ::= 'program' identifier 'is' 'begin' procedure_list 'endprogram' '.'
+program        ::= 'program' identifier 'is' procedure_list 'begin' statement_list 'end' 'program' '.'
 
-procedure_list   ::= funct_definition
-                   | variable_declaration
+procedure_list ::= funct_definition
+                 | variable_declaration
+                 | global_var_declaration
 
 statement_list ::= statement
                  | statement statement_list
 
-statement      ::= variable_declaration
-                  | list_declaration
-                  | assignment
-                  | list_assignment
-                  | if_statement
-                  | for_statement
-                  | 'return' expression ';'
+statement      ::= variable_declaration  
+                 | list_declaration
+                 | assignment
+                 | list_assignment
+                 | if_statement
+                 | for_statement
+                 | 'return' expression ';'
+                 | global_var_declaration
 
-funct_definition ::= 'procedure' identifier ':' 'INT|FLOAT|STRING|BOOL'  '(' variable_declaration?
-                    | ',' variable_declaration
-                    | ')' 'begin' statement_list 'endprocedure'
+funct_definition       ::= 'procedure' identifier ':' 'INT|FLOAT|STRING|BOOL'  '(' variable_declaration?
+                          | ',' variable_declaration
+                          | ')' 'begin' statement_list 'endprocedure'
 
-variable_declaration ::= 'variable' identifier ':' 'INT|FLOAT|STRING|BOOL' assignment? ';'
+variable_declaration   ::= 'variable' identifier ':' 'INT|FLOAT|STRING|BOOL' assignment? ';'
 
-list_declaration     ::= list identifier ':' INT|FLOAT|STRING|BOOL list_assignment? ';'
+global_var_declaration ::= 'global' 'variable' identifier ':' 'INT|FLOAT|STRING|BOOL' assignment? ';'
 
-assignment      ::= (type)identifier? '=' expression|conditonal ';'
+list_declaration       ::= list identifier ':' INT|FLOAT|STRING|BOOL list_assignment? ';'
+
+assignment      ::= (type)identifier? ':=' expression|conditonal ';'
 		  
-list_assignment ::= (list)identifier? '=' identifier ';' | '[' expression
+list_assignment ::= (list)identifier? ':=' identifier ';' | '[' expression|conditonal
 		          | ',' expression|conditonal
 		          | ']' ';'
 
@@ -36,16 +40,13 @@ i_assignment    ::= (list (type))identifier '[' (INTLITERAL|(int)identifier)>=0 
                   | BOOLLITERAL|INTLITERAL|FLOATLITERAL|STRLITERAL
                   | (type)identifier
 
-if_statement    ::= 'if' condition 'then' statement_list 
+if_statement    ::= 'if' '(' condition ')' 'then' statement_list 
                   | else_statement? 
-                  | 'endif'
+                  | 'end' 'if'
 
 else_statement  ::= 'else' statement_list
 
-*for_statement  ::= 'for' '(' variable_declaration(/w assignment) ';' condition ';' expression ')' statement_list 'endfor'
-
-expr_            ::= expression
-                  | condition 
+*for_statement  ::= 'for' '(' variable_declaration(/w assignment) ';' condition ';' expression ')' statement_list 'end' 'for'
 
 condition       ::= expression ('==') expression -> all types 
                   | expression ('!=' | '<' | '>' | '<=' | '>=') expression -> (BOOL|INT) & (INT|FLOAT)
@@ -60,6 +61,7 @@ term            ::= factor
                   | term ('&' | '|') factor -> int
 
 factor          ::= identifier
+                  | identifier '(' expression ')'
                   | -INTLITERAL|-FLOATLITERAL
                   | BOOLLITERAL|INTLITERAL|FLOATLITERAL|STRLITERAL
                   | '(' expression ')'

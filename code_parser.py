@@ -173,6 +173,13 @@ class FunctionDefinitionNode():
     def __repr__(self) -> str:
         return "THIS IS A FUNCTION"
 
+class FunctionAccessNode():
+    def __init__(self, identifier, function) -> None:
+        self.identifier = identifier
+        self.function = function
+    def __repr__(self) -> str:
+        return "THIS IS A FUNCTION"
+
 class ReturnNode():
     def __init__(self, expression) -> None:
         self.expression = expression
@@ -264,25 +271,33 @@ class Parser:
                 if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "is":
                     res.reg_adv()
                     self.advance()
+                    procedure_list = res.reg(self.procedure_list())
+                    if res.error:
+                        return res
                     if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "begin":
                         res.reg_adv()
                         self.advance()
-                        procedure_list = res.reg(self.procedure_list())
+                        statement_list = res.reg(self.statement_list())
                         if res.error:
                             return res
-                        if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "endprogram":
+                        if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "end":
                             res.reg_adv()
                             self.advance()
-                            if self.currToken.type == TOKEN_PERIOD:
+                            if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "program":
                                 res.reg_adv()
                                 self.advance()
-                                return res.success(procedure_list)
+                                if self.currToken.type == TOKEN_PERIOD:
+                                    res.reg_adv()
+                                    self.advance()
+                                    return res.success(procedure_list)
+                                else:
+                                    return res.fail(InvalidSyntax(self.currToken.line, "A program must end with a '.'"))
                             else:
-                                return res.fail(InvalidSyntax(self.currToken.line, "A program must end with a '.'"))
+                                return res.fail(InvalidSyntax(self.currToken.line, "A program must have 'program' after the 'end' keyword"))
                         else:
-                            return res.fail(InvalidSyntax(self.currToken.line, "A program must have 'endprogram' keyword after procedure_list"))
+                            return res.fail(InvalidSyntax(self.currToken.line, "A program must have 'end' keyword after statement_list"))
                     else:
-                         return res.fail(InvalidSyntax(self.currToken.line, "A program must have 'begin' after the 'is' keyword"))
+                         return res.fail(InvalidSyntax(self.currToken.line, "A program must have 'begin' after the procedure_list"))
                 else:
                     return res.fail(InvalidSyntax(self.currToken.line, "A program must have 'is' after the name identifier"))
             else:
@@ -295,7 +310,7 @@ class Parser:
         res = Result()
         functs = []
         variables = []
-        while not (self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "endprogram"):
+        while not (self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "begin"):
             if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "procedure":
                 function_def = res.reg(self.funct_definition())
                 if res.error:
@@ -306,23 +321,26 @@ class Parser:
                 if res.error:
                     return res
                 variables.append(var)
+            elif self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "global":
+                var = res.reg(self.global_var_declaration())
+                if res.error:
+                    return res
+                variables.append(var)
             else:
-               if self.currToken.type == TOKEN_EOF:
-                   return res.fail(InvalidSyntax(self.currToken.line, "Expected keyword endprogram after the procedure list"))
-               return res.fail(InvalidSyntax(self.currToken.line, "Expected a variable or function declaration"))
+               return res.fail(InvalidSyntax(self.currToken.line, "Expected the keyword 'begin' to start the main function"))
         return res.success(programNode(functs, variables))  
 
-    def statement_list(self, terminator):
+    def statement_list(self):
         res = Result()
         statements = []
-        while not(self.currToken.type == TOKEN_KEYWORD and self.currToken.value in terminator):
-            statement = res.reg(self.statement(terminator))
+        while not(self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "end"):
+            statement = res.reg(self.statement())
             if res.error:
                 return res
             statements.append(statement)
         return res.success(ListNode("Statements", statements))
 
-    def statement(self, terminator):
+    def statement(self):
         res = Result()
         curr = self.currToken
         pass # I need to fix this so that advance works with it and all other types might be 
@@ -332,13 +350,18 @@ class Parser:
             if res.error:
                 return res
             return res.success(val)
+        elif curr.type == TOKEN_KEYWORD and curr.value == "global":
+            val = res.reg(self.global_var_declaration())
+            if res.error:
+                return res
+            return res.success(val)
         elif curr.type == TOKEN_KEYWORD and curr.value == "list":
             val = res.reg(self.list_assignment())
             if res.error:
                 return res
             return res.success(val)
         elif curr.type == TOKEN_IDENTIFIER:
-            val = res.reg(self.assignment())
+            val = res.reg(self.assignment("Identifier"))
             if res.error:
                 return res
             return res.success(val) # non-variable declared
@@ -368,7 +391,7 @@ class Parser:
                 self.advance()
                 return res.success(ReturnNode(expression))
         else:
-            return res.fail(InvalidSyntax(curr.line, f"Invalid Statement declaration expected a {terminator} to end statements"))   
+            return res.fail(InvalidSyntax(curr.line, f"Invalid Statement declaration expected 'end' keyword after statement list"))   
 
     def funct_definition(self):
         pass # need to change around the variables
@@ -407,16 +430,25 @@ class Parser:
                                     if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "begin":
                                         res.reg_adv()
                                         self.advance()
-                                        statement_list = res.reg(self.statement_list("endprocedure"))
-                                        if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "endprocedure":
+                                        statement_list = res.reg(self.statement_list())
+                                        if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "end":
                                             res.reg_adv()
                                             self.advance()
-                                            pass
-                                            return res.success(FunctionDefinitionNode()) # make this acutally return
+                                            if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "procedure":
+                                                res.reg_adv()
+                                                self.advance()
+                                                if self.currToken.type == TOKEN_SEMI:
+                                                    res.reg_adv()
+                                                    self.advance()
+                                                    return res.success(FunctionDefinitionNode()) # make this acutally return
+                                                else:
+                                                    return res.fail(InvalidSyntax(self.currToken.line, "Expected a ';' after procedure"))
+                                            else:
+                                                return res.fail(InvalidSyntax(self.currToken.line, "Expected the 'procedure' keyword"))
                                         else:
-                                            return res.fail(InvalidSyntax(self.currToken.line, "Expected the 'endprocedure' keyword"))
+                                            return res.fail(InvalidSyntax(self.currToken.line, "Expected the 'end' keyword"))
                                     else:
-                                        return res.fail(InvalidSyntax(self.currToken.line, "Expected the 'begin' keyword"))
+                                        return res.fail(InvalidSyntax(self.currToken.line, "Expected the 'begin' keyword after function definition"))
                                 else:
                                     return res.fail(InvalidSyntax(self.currToken.line, "Expected a ')"))
                             elif self.currToken.type == TOKEN_RPAREN:
@@ -425,14 +457,23 @@ class Parser:
                                 if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "begin":
                                     res.reg_adv()
                                     self.advance()
-                                    statement_list = res.reg(self.statement_list("endprocedure"))
-                                    if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "endprocedure":
+                                    statement_list = res.reg(self.statement_list())
+                                    if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "end":
                                         res.reg_adv()
                                         self.advance()
-                                        pass
-                                        return res.success(FunctionDefinitionNode()) # make this acutally return
+                                        if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "procedure":
+                                            res.reg_adv()
+                                            self.advance()
+                                            if self.currToken.type == TOKEN_SEMI:
+                                                res.reg_adv()
+                                                self.advance()
+                                                return res.success(FunctionDefinitionNode()) # make this acutally return
+                                            else:
+                                                return res.fail(InvalidSyntax(self.currToken.line, "Expected a ';' after procedure"))
+                                        else:
+                                            return res.fail(InvalidSyntax(self.currToken.line, "Expected the 'procedure' keyword"))
                                     else:
-                                        return res.fail(InvalidSyntax(self.currToken.line, "Expected the 'endprocedure' keyword"))
+                                        return res.fail(InvalidSyntax(self.currToken.line, "Expected the 'end' keyword"))
                                 else:
                                     return res.fail(InvalidSyntax(self.currToken.line, "Expected the 'begin' keyword"))
                             else:
@@ -482,7 +523,7 @@ class Parser:
                             return res.success(VariableAssignmentNode(type_, identifier, None, False))
                         else:
                             if needAssignment:
-                                return res.fail(InvalidSyntax(self.currToken.line, "Expected an '=' for variable assignment"))
+                                return res.fail(InvalidSyntax(self.currToken.line, "Expected an ':=' for variable assignment"))
                             return res.fail(InvalidSyntax(self.currToken.line, "Expected a ';'"))
                     else:
                         return res.fail(InvalidSyntax(self.currToken.line, "Expected a (INTEGER|FLOAT|STRING|BOOL) type for the variable"))
@@ -492,6 +533,50 @@ class Parser:
                 return res.fail(InvalidSyntax(self.currToken.line, "Expected an identifier for the list"))
         else:
             return res.fail(InvalidSyntax(curr.line, "Expected the variable keyword for declaration"))   
+
+    def global_var_declaration(self, needAssignment=False):
+        res = Result()
+        curr = self.currToken
+        if curr.type == TOKEN_KEYWORD and curr.value == "global":
+            res.reg_adv()
+            self.advance()
+            if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "variable":
+                res.reg_adv()
+                self.advance()
+                if self.currToken.type == TOKEN_IDENTIFIER:
+                    identifier = self.currToken.value
+                    res.reg_adv()
+                    self.advance()
+                    if self.currToken.type == TOKEN_COLON:
+                        res.reg_adv()
+                        self.advance()
+                        if self.currToken.type == TOKEN_TYPE:
+                            type_ = self.currToken.value
+                            res.reg_adv()
+                            self.advance()
+                            if self.currToken.type == TOKEN_ASSIGN:
+                                expression = res.reg(self.assignment(type_))
+                                if res.error:
+                                    return res
+                                return res.success(VariableAssignmentNode(type_, identifier, expression, False))
+                            elif self.currToken.type == TOKEN_SEMI and not needAssignment:
+                                res.reg_adv()
+                                self.advance()
+                                return res.success(VariableAssignmentNode(type_, identifier, None, False))
+                            else:
+                                if needAssignment:
+                                    return res.fail(InvalidSyntax(self.currToken.line, "Expected an ':=' for variable assignment"))
+                                return res.fail(InvalidSyntax(self.currToken.line, "Expected a ';'"))
+                        else:
+                            return res.fail(InvalidSyntax(self.currToken.line, "Expected a (INTEGER|FLOAT|STRING|BOOL) type for the variable"))
+                    else:
+                        return res.fail((InvalidSyntax(self.currToken.line, "Expected a ':'")))
+                else:
+                    return res.fail(InvalidSyntax(self.currToken.line, "Expected an identifier for the list"))
+            else:
+                return res.fail(InvalidSyntax(curr.line, "Expected the variable keyword for declaration"))   
+        else: 
+            return res.fail(InvalidSyntax(curr.line, "Expected the global keyword for declaration"))   
 
     def list_declaration(self):
         res = Result()
@@ -533,21 +618,23 @@ class Parser:
     def assignment(self, type_):
         res = Result()
         if self.currToken.type == TOKEN_IDENTIFIER:
-            pass # need to handle non token assigned variable 
+            identifier =  self.currToken # pass need to fix and store values
+            res.reg_adv()
+            self.advance()
         if self.currToken.type == TOKEN_ASSIGN:
             res.reg_adv()
             self.advance()
-            expression = res.reg(self.expression())
+            condition = res.reg(self.condition())
             if res.error:
                 return res
             if self.currToken.type == TOKEN_SEMI:
                 res.reg_adv()
                 self.advance()
-                return res.success(expression)
+                return res.success(condition)
             else:
                return res.fail(InvalidSyntax(self.currToken.line, "Expected an ';'"))
         else: 
-            return res.fail(InvalidSyntax(self.currToken.line, "Expected an '=' for variable assignment"))
+            return res.fail(InvalidSyntax(self.currToken.line, "Expected an ':=' for variable assignment"))
 
 
     def list_assignment(self, type_):
@@ -596,7 +683,7 @@ class Parser:
             else:
                 return res.fail(InvalidSyntax(self.currToken.line, "Expected a list declaration or variable"))
         else: 
-            return res.fail(InvalidSyntax(self.currToken.line, "Expected an '=' for list assignment"))
+            return res.fail(InvalidSyntax(self.currToken.line, "Expected an ':=' for list assignment"))
 
     def if_Statement(self):
         res = Result()
@@ -604,26 +691,50 @@ class Parser:
         if curr.type == TOKEN_KEYWORD and curr.value == "if":
             res.reg_adv()
             self.advance()
-            conditional = res.reg(self.condition())
-            if res.error:
-                return res
-            if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == 'then':
-                statements = res.reg(self.statement_list(["else", "endif"]))
+            if self.currToken.type == TOKEN_LPAREN:
+                res.reg_adv()
+                self.advance()
+                conditional = res.reg(self.condition())
                 if res.error:
                     return res
-                otherNodes = None
-                if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "else":
-                    otherNodes = res.reg(self.else_statement())
-                    if res.error:
-                        return res
-                if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "endif":
-                    return res.success(IfNode(conditional, statements, otherNodes))
+                if self.currToken.type == TOKEN_RPAREN:
+                    res.reg_adv()
+                    self.advance()
+                    if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == 'then':
+                        res.reg_adv()
+                        self.advance()
+                        statements = res.reg(self.statement_list())
+                        if res.error:
+                            return res
+                        otherNodes = None
+                        if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "else":
+                            otherNodes = res.reg(self.else_statement())
+                            if res.error:
+                                return res
+                        if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "end":
+                            res.reg_adv()
+                            self.advance()
+                            if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "if":
+                                res.reg_adv()
+                                self.advance()
+                                if self.currToken.type == TOKEN_SEMI:
+                                    res.reg_adv()
+                                    self.advance()
+                                    return res.success(IfNode(conditional, statements, otherNodes))
+                                else:
+                                    return res.fail(InvalidSyntax(self.currToken.line, "Expected ';' after 'if'"))
+                            else:
+                                return res.fail(InvalidSyntax(self.currToken.line, "Expected keyword 'if'"))
+                        else:
+                            return res.fail(InvalidSyntax(self.currToken.line, "Expected keyword 'end'"))
+                    else:
+                        return res.fail(InvalidSyntax(self.currToken.line, "Expected keyword 'then'"))
                 else:
-                    return res.fail(InvalidSyntax(self.currToken.line, "Expected keyword endif"))
+                    return res.fail(InvalidSyntax(curr.line, "Expected a ')'"))
             else:
-                return res.fail(InvalidSyntax(self.currToken.line, "Expected keyword then"))
+                return res.fail(InvalidSyntax(curr.line, "Expected a '('"))
         else:
-            return res.fail(InvalidSyntax(curr.line, "Expected the if keyword"))
+            return res.fail(InvalidSyntax(curr.line, "Expected keyword 'if'"))
 
     def else_statement(self):
         res = Result()
@@ -631,7 +742,7 @@ class Parser:
         if curr.type == TOKEN_KEYWORD and curr.value == "else":
             res.reg_adv()
             self.advance()
-            statements = res.reg(self.statement_list(["endif"]))
+            statements = res.reg(self.statement_list())
             if res.error:
                 return res
             return res.success(ElseNode(statements))
@@ -665,13 +776,18 @@ class Parser:
                         if self.currToken.type == TOKEN_RPAREN:
                             res.reg_adv()
                             self.advance()
-                            statements = res.reg(self.statement_list(["endfor"]))
+                            statements = res.reg(self.statement_list())
                             if res.error:
                                 return res
-                            if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "endfor":
-                                return res.success(ForNode(var, conditional, expression, statements))
+                            if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "end":
+                                res.reg_adv()
+                                self.advance()
+                                if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "for":
+                                    return res.success(ForNode(var, conditional, expression, statements))
+                                else:
+                                    return res.fail(InvalidSyntax(self.currToken.line, "'for' keyword expected after end"))
                             else:
-                                return res.fail(InvalidSyntax(self.currToken.line, "for loops must end with endfor keyword"))
+                                return res.fail(InvalidSyntax(self.currToken.line, "for loops must end with 'end' keyword"))
                         else:
                             return res.fail(InvalidSyntax(self.currToken.line, "Expected an ')' after iteration expression"))
                     else:
@@ -751,8 +867,23 @@ class Parser:
             return res.success(BooleanNode(curr))
 
         elif curr.type in [TOKEN_IDENTIFIER]:
+            identifier = curr
             res.reg_adv()
             self.advance()
+            if self.currToken.type == TOKEN_LPAREN:
+                res.reg_adv()
+                self.advance()
+                expression = None
+                if self.currToken.type != TOKEN_RPAREN:
+                    expression = res.reg(self.expression())
+                    if res.error:
+                        return res
+                if self.currToken.type == TOKEN_RPAREN:
+                    res.reg_adv()
+                    self.advance()
+                    return res.success(FunctionAccessNode(identifier, expression))
+                else:
+                    return res.fail(InvalidSyntax(self.currToken.line, "Excpected a ')'"))
             return res.success(VariableAccessNode(curr))
 
         elif curr.type in [TOKEN_LPAREN]:
