@@ -82,7 +82,9 @@ class TypeNode:
     def __repr__(self) -> str:
         return f'{self.token.type}'
 
-class NumberNode(TypeNode):
+class IntNode(TypeNode):
+    pass
+class FloatNode(TypeNode):
     pass
 class StringNode(TypeNode):
     pass
@@ -103,30 +105,35 @@ class UnaryOpNode():
         self.op_token = operation_token
         self.node = node
     def __repr__(self) -> str:
-        return f"{self.op_token.Type}, {self.node}"
+        return f"{self.op_token.type}, {self.node}"
 
 # Variables Nodes
 class VariableAssignmentNode():
-    def __init__(self, identifierToken, valueToken) -> None:
+    def __init__(self, identifierToken, valueToken, index=None) -> None:
         self.identifierToken = identifierToken
         self.valueToken = valueToken
+        self.index = index
     def __repr__(self) -> str:
         return f"{self.identifierToken.value}: {self.valueToken}"
 
 class VariableCreationNode():
-    def __init__(self, type_, identifierToken, isList=False,) -> None:
+    def __init__(self, type_, identifierToken, isList=False, list_size=None) -> None:
         self.identifierToken = identifierToken
         self.type = type_
         self.isList = isList
+        self.size = list_size
     def __repr__(self) -> str:
         if self.isList:
-            return f"List: {self.identifierToken.value}: {self.type}"
+            return f"List: {self.identifierToken.value}: {self.type} - Size: {self.size}"
         return f"{self.identifierToken.value}: {self.type}"
 
 class VariableAccessNode(): # this is for variable identifiers
-    def __init__(self, identifierToken) -> None:
+    def __init__(self, identifierToken , index=None) -> None:
         self.identifierToken = identifierToken
+        self.index = index
     def __repr__(self) -> str:
+        if self.index:
+            return f"{self.identifierToken.value} at element {self.index}"
         return f"{self.identifierToken.value}"
 
 class IfNode():
@@ -146,13 +153,12 @@ class ElseNode():
         return f"Else: {self.body}"
 
 class ForNode():
-    def __init__(self, variable, conditional, iter_expr, body) -> None:
+    def __init__(self, variable, conditional, body) -> None:
         self.variable = variable
         self.conditional = conditional
-        self.iter_expr = iter_expr
         self.body = body
     def __repr__(self) -> str:
-        return f"For: {self.variable} - {self.conditional} - {self.iter_expr}: {self.body}"
+        return f"For: ({self.variable}, {self.conditional}): {self.body}"
 
 # List Node
 class ListNode():
@@ -488,14 +494,34 @@ class Parser:
                         type_ = self.currToken.value
                         res.reg_adv()
                         self.advance()
-                        if self.currToken.type == TOKEN_SEMI:
+                        if self.currToken.type == TOKEN_LBRACKET:
                             res.reg_adv()
                             self.advance()
-                            return res.success(VariableCreationNode(type_, identifier, False))
+                            if self.currToken.type == TOKEN_INTLITERAL:
+                                int_literal = self.currToken
+                                res.reg_adv()
+                                self.advance()
+                                if self.currToken.type == TOKEN_RBRACKET:
+                                    res.reg_adv()
+                                    self.advance()
+                                    if self.currToken.type == TOKEN_SEMI:
+                                        res.reg_adv()
+                                        self.advance()
+                                        return res.success(VariableCreationNode(type_, identifier, True, int_literal))
+                                    else:
+                                        return res.fail(InvalidSyntax(self.currToken.line, "Expected a ';' after the brackets"))
+                                else:
+                                    return res.fail(InvalidSyntax(self.currToken.line, "Expected a ']'"))
+                            else:
+                                return res.fail(InvalidSyntax(self.currToken.line, "Expected a list size"))
+                        elif self.currToken.type == TOKEN_SEMI:
+                            res.reg_adv()
+                            self.advance()
+                            return res.success(VariableCreationNode(type_, identifier))
                         elif inFunction:
-                            return res.success(VariableCreationNode(type_, identifier, False))
+                            return res.success(VariableCreationNode(type_, identifier))
                         else:
-                            return res.fail(InvalidSyntax(self.currToken.line, "Expected a ';'"))
+                            return res.fail(InvalidSyntax(self.currToken.line, "Expected a ';' or list declaration [#];"))
                     else:
                         return res.fail(InvalidSyntax(self.currToken.line, "Expected a (INTEGER|FLOAT|STRING|BOOL) type for the variable"))
                 else:
@@ -525,7 +551,27 @@ class Parser:
                             type_ = self.currToken.value
                             res.reg_adv()
                             self.advance()
-                            if self.currToken.type == TOKEN_SEMI:
+                            if self.currToken.type == TOKEN_LBRACKET:
+                                res.reg_adv()
+                                self.advance()
+                                if self.currToken.type == TOKEN_INTLITERAL:
+                                    int_literal = self.currToken
+                                    res.reg_adv()
+                                    self.advance()
+                                    if self.currToken.type == TOKEN_RBRACKET:
+                                        res.reg_adv()
+                                        self.advance()
+                                        if self.currToken.type == TOKEN_SEMI:
+                                            res.reg_adv()
+                                            self.advance()
+                                            return res.success(VariableCreationNode(type_, identifier, True, int_literal))
+                                        else:
+                                            return res.fail(InvalidSyntax(self.currToken.line, "Expected a ';' after the brackets"))
+                                    else:
+                                        return res.fail(InvalidSyntax(self.currToken.line, "Expected a ']'"))
+                                else:
+                                    return res.fail(InvalidSyntax(self.currToken.line, "Expected a list size"))
+                            elif self.currToken.type == TOKEN_SEMI:
                                 res.reg_adv()
                                 self.advance()
                                 return res.success(VariableCreationNode(type_, identifier, False))
@@ -548,6 +594,21 @@ class Parser:
             identifier =  self.currToken
             res.reg_adv()
             self.advance()
+            int_literal = None
+            if self.currToken.type == TOKEN_LBRACKET:
+                res.reg_adv()
+                self.advance()
+                if self.currToken.type == TOKEN_INTLITERAL:
+                    int_literal = self.currToken
+                    res.reg_adv()
+                    self.advance()
+                    if self.currToken.type == TOKEN_RBRACKET:
+                        res.reg_adv()
+                        self.advance()
+                    else:
+                        return res.fail(InvalidSyntax(self.currToken.line, "Expected ']' to close array indexing"))
+                else:
+                    return res.fail(InvalidSyntax(self.currToken.line, "Expected integer for array indexing"))
             if self.currToken.type == TOKEN_ASSIGN:
                 res.reg_adv()
                 self.advance()
@@ -557,6 +618,8 @@ class Parser:
                 if self.currToken.type == TOKEN_SEMI:
                     res.reg_adv()
                     self.advance()
+                    if int_literal:
+                        return res.success(VariableAssignmentNode(identifier, condition, int_literal))
                     return res.success(VariableAssignmentNode(identifier, condition))
                 else:
                    return res.fail(InvalidSyntax(self.currToken.line, "Expected an ';'"))
@@ -564,55 +627,6 @@ class Parser:
                 return res.fail(InvalidSyntax(self.currToken.line, "Expected an ':=' for variable assignment"))
         else:
             return res.fail(InvalidSyntax(self.currToken.line, "Expected an variable identifier"))
-
-
-    # def list_assignment(self, type_):
-    #     res = Result()
-    #     if self.currToken.type == TOKEN_IDENTIFIER:
-    #         pass
-    #     if self.currToken.type == TOKEN_ASSIGN:
-    #         res.reg_adv()
-    #         self.advance()
-    #         if self.currToken.type == TOKEN_IDENTIFIER:
-    #             res.reg_adv()
-    #             self.advance()
-    #             pass # still needs to be type checked - semantics checker
-    #             if self.currToken.type == TOKEN_SEMI:
-    #                 res.reg_adv()
-    #                 self.advance()
-    #                 return res.success(ListNode(type_, expressions))
-    #             else:
-    #                 return res.fail(InvalidSyntax(self.currToken.line, "Expected an ';'"))
-    #         if self.currToken.type == TOKEN_LBRACKET:
-    #             res.reg_adv()
-    #             self.advance()
-    #             expressions = []
-    #             expression = res.reg(self.condition())
-    #             if res.error:
-    #                 return res
-    #             expressions.append(expression)
-    #             while self.currToken.type == TOKEN_COMMA:
-    #                 res.reg_adv()
-    #                 self.advance()
-    #                 expression = res.reg(self.condition())
-    #                 if res.error:
-    #                     return res
-    #                 expressions.append(expression)
-    #             if self.currToken.type == TOKEN_RBRACKET:
-    #                 res.reg_adv()
-    #                 self.advance()
-    #                 if self.currToken.type == TOKEN_SEMI:
-    #                     res.reg_adv()
-    #                     self.advance()
-    #                     return res.success(ListNode(type_, expressions))
-    #                 else:
-    #                     return res.fail(InvalidSyntax(self.currToken.line, "Expected an ';'"))
-    #             else:
-    #                 return res.fail(InvalidSyntax(self.currToken.line, f"Expected an ']' but got a '{self.currToken.value}'"))
-    #         else:
-    #             return res.fail(InvalidSyntax(self.currToken.line, "Expected a list declaration or variable"))
-    #     else: 
-    #         return res.fail(InvalidSyntax(self.currToken.line, "Expected an ':=' for list assignment"))
 
     def if_Statement(self):
         res = Result()
@@ -687,42 +701,39 @@ class Parser:
             if self.currToken.type == TOKEN_LPAREN:
                 res.reg_adv()
                 self.advance()
-                var = res.reg(self.variable_declaration())
-                if res.error:
-                    return res
+                if self.currToken.type == TOKEN_IDENTIFIER:
+                    var = res.reg(self.assignment())
+                elif self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "variable": 
+                    var = res.reg(self.variable_declaration())
+                else:
+                    return res.fail(InvalidSyntax(curr.line, "Expected a variable declaration or assigment"))
                 conditional = res.reg(self.condition())
                 if res.error:
                     return res
-                if self.currToken.type == TOKEN_SEMI:
+                if self.currToken.type == TOKEN_RPAREN:
                     res.reg_adv()
                     self.advance()
-                    expression = res.reg(self.expression())
+                    statements = res.reg(self.statement_list())
                     if res.error:
                         return res
-                    if self.currToken.type == TOKEN_SEMI:
+                    if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "end":
                         res.reg_adv()
                         self.advance()
-                        if self.currToken.type == TOKEN_RPAREN:
+                        if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "for":
                             res.reg_adv()
                             self.advance()
-                            statements = res.reg(self.statement_list())
-                            if res.error:
-                                return res
-                            if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "end":
+                            if self.currToken.type == TOKEN_SEMI:
                                 res.reg_adv()
                                 self.advance()
-                                if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "for":
-                                    return res.success(ForNode(var, conditional, expression, statements))
-                                else:
-                                    return res.fail(InvalidSyntax(self.currToken.line, "'for' keyword expected after end"))
+                                return res.success(ForNode(var, conditional, statements))
                             else:
-                                return res.fail(InvalidSyntax(self.currToken.line, "for loops must end with 'end' keyword"))
+                                return res.fail(InvalidSyntax(self.currToken.line, "Expected ';' after for"))
                         else:
-                            return res.fail(InvalidSyntax(self.currToken.line, "Expected an ')' after iteration expression"))
+                            return res.fail(InvalidSyntax(self.currToken.line, "'for' keyword expected after 'end' keyword"))
                     else:
-                        return res.fail(InvalidSyntax(self.currToken.line, "Expected an ';' after iteration expression"))
+                        return res.fail(InvalidSyntax(self.currToken.line, "for loops must end with 'end' keyword"))
                 else:
-                    return res.fail(InvalidSyntax(self.currToken.line, "Expected an ';' after conditional"))
+                    return res.fail(InvalidSyntax(self.currToken.line, "Expected an ')' after iteration expression"))
             else:
                 return res.fail(InvalidSyntax(self.currToken.line, "Expected a '('"))
         else:
@@ -780,10 +791,15 @@ class Parser:
                 return res
             return res.success(UnaryOpNode(curr, factor))
 
-        if curr.type in [TOKEN_INTLITERAL, TOKEN_FLOATLITERAL]:
+        if curr.type == TOKEN_INTLITERAL:
             res.reg_adv()
             self.advance()
-            return res.success(NumberNode(curr))
+            return res.success(IntNode(curr))
+
+        elif curr.type == TOKEN_FLOATLITERAL:
+            res.reg_adv()
+            self.advance()
+            return res.success(FloatNode(curr))
 
         elif curr.type in [TOKEN_STRLITERAL]:
             res.reg_adv()
@@ -802,7 +818,6 @@ class Parser:
             if self.currToken.type == TOKEN_LPAREN:
                 res.reg_adv()
                 self.advance()
-                pass # meed to change to match grammar
                 expression = None
                 if self.currToken.type != TOKEN_RPAREN:
                     expression = res.reg(self.expression())
@@ -814,6 +829,21 @@ class Parser:
                     return res.success(FunctionAccessNode(identifier, expression))
                 else:
                     return res.fail(InvalidSyntax(self.currToken.line, "Excpected a ')'"))
+            if self.currToken.type == TOKEN_LBRACKET:
+                res.reg_adv()
+                self.advance()
+                if self.currToken.type == TOKEN_INTLITERAL:
+                    index = self.currToken
+                    res.reg_adv()
+                    self.advance()
+                    if self.currToken.type == TOKEN_RBRACKET:
+                        res.reg_adv()
+                        self.advance()
+                        return res.success(VariableAccessNode(identifier, index))
+                    else:
+                        return res.fail(InvalidSyntax(self.currToken.line, "Excpected a ']'"))
+                else:
+                    return res.fail(InvalidSyntax(self.currToken.line, "Excpected an integer access index"))
             return res.success(VariableAccessNode(curr))
 
         elif curr.type in [TOKEN_LPAREN]:

@@ -16,25 +16,16 @@ funct_definition       ::= 'procedure' identifier ':' 'INT|FLOAT|STRING|BOOL'  '
                           | ',' variable_declaration
                           | ')' procedure_list 'begin' statement_list 'endprocedure'
 
-variable_declaration   ::= 'variable' identifier ':' 'INT|FLOAT|STRING|BOOL'';'
+variable_declaration   ::= 'variable' identifier ':' 'INT|FLOAT|STRING|BOOL'
+                         | '[' INTLITERAL ']'
+                         | ';'
 
-global_var_declaration ::= 'global' 'variable' identifier ':' 'INT|FLOAT|STRING|BOOL'';'
+global_var_declaration ::= 'global' 'variable' identifier ':' 'INT|FLOAT|STRING|BOOL'
+                         | '[' INTLITERAL ']'
+                         | ';'
 
 assignment      ::= (type)identifier ':=' expression|conditonal ';'
-
-list_declaration       ::= list identifier ':' INT|FLOAT|STRING|BOOL ';'
-		  
-list_assignment ::= (list)identifier ':=' identifier ';' | '[' expression|conditonal
-		          | ',' expression|conditonal
-		          | ']' ';'
-
-list_operators  ::= (list (int|float))identifier '[' (INTLITERAL|(int)identifier)>=0 ']' 
-                  | ('+' | '-') term
-                  | ('*' | '/') factor
-
-i_assignment    ::= (list (type))identifier '[' (INTLITERAL|(int)identifier)>=0 ']' '='
-                  | BOOLLITERAL|INTLITERAL|FLOATLITERAL|STRLITERAL
-                  | (type)identifier
+                  | (type)identifier '[' INTLITERAL ']' ':=' expression|conditonal ';'
 
 if_statement    ::= 'if' '(' condition ')' 'then' statement_list 
                   | else_statement? 
@@ -42,7 +33,7 @@ if_statement    ::= 'if' '(' condition ')' 'then' statement_list
 
 else_statement  ::= 'else' statement_list
 
-*for_statement  ::= 'for' '(' variable_declaration(/w assignment) ';' condition ';' expression ')' statement_list 'end' 'for'
+*for_statement  ::= 'for' '(' variable_declaration|assignment ';' condition ';' expression ')' statement_list 'end' 'for'
 
 condition       ::= expression ('==') expression -> all types 
                   | expression ('!=' | '<' | '>' | '<=' | '>=') expression -> (BOOL|INT) & (INT|FLOAT)
@@ -57,10 +48,8 @@ term            ::= factor
                   | term ('&' | '|') factor -> int
 
 factor          ::= identifier
-                  | identifier '(' 
-                  | expression
-                  | , expression
-                  | ')'
+                  | identifier '(' expression? ')'
+                  | identifier '[' expression? ']'
                   | -INTLITERAL|-FLOATLITERAL
                   | BOOLLITERAL|INTLITERAL|FLOATLITERAL|STRLITERAL
                   | '(' expression ')'

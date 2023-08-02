@@ -10,6 +10,10 @@ class InvalidSyntax(Error):
     def __init__(self, line, details) -> None:
         super().__init__("Invalid Syntax", line, details)
 
+class InvalidSemantics(Error):
+    def __init__(self, line, details) -> None:
+        super().__init__("Invalid Syntax", line, details)
+
 class BlankFile():
     def __init__(self) -> None:
         pass

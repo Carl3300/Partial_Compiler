@@ -210,7 +210,7 @@ def assignPunctutation(tokens, word, line_number):
         tokens.append(Token(TOKEN_PUNCTUATION, word, line_number))
     return tokens
 
-def tokenize(code):
+def Tokenize(code):
     tokens = []
     last_line_number = 0
     last_char = ''
@@ -340,12 +340,12 @@ def tokenize(code):
                     last_line_number = line_number
             i += 1
         if state == TOKEN_IDENTIFIER:
-            if word in keywords:
+            if word.lower() in keywords:
                 if word.lower() in ["true", "false"]: 
                     tokens.append(Token(TOKEN_BOOLLITERAL, word.lower() , line_number))
                 else:
                     tokens.append(Token(TOKEN_KEYWORD, word.lower(), line_number))
-            elif word in types:
+            elif word.lower() in types:
                 tokens.append(Token(TOKEN_TYPE, word.lower(), line_number))
             else:
                 tokens.append(Token(TOKEN_IDENTIFIER, word.lower(), line_number))
