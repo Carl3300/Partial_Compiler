@@ -1,4 +1,4 @@
-from tokenizer import tokenize, Token
+from tokenizer import tokenize
 from code_parser import ParseCode
 
 TOKEN_OPERATOR = 'OPERATOR'

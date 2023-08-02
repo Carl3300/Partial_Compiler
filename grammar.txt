@@ -7,28 +7,24 @@ procedure_list ::= funct_definition
 statement_list ::= statement
                  | statement statement_list
 
-statement      ::= variable_declaration  
-                 | list_declaration
-                 | assignment
-                 | list_assignment
+statement      ::= assignment
                  | if_statement
                  | for_statement
                  | 'return' expression ';'
-                 | global_var_declaration
 
 funct_definition       ::= 'procedure' identifier ':' 'INT|FLOAT|STRING|BOOL'  '(' variable_declaration?
                           | ',' variable_declaration
-                          | ')' 'begin' statement_list 'endprocedure'
+                          | ')' procedure_list 'begin' statement_list 'endprocedure'
 
-variable_declaration   ::= 'variable' identifier ':' 'INT|FLOAT|STRING|BOOL' assignment? ';'
+variable_declaration   ::= 'variable' identifier ':' 'INT|FLOAT|STRING|BOOL'';'
 
-global_var_declaration ::= 'global' 'variable' identifier ':' 'INT|FLOAT|STRING|BOOL' assignment? ';'
+global_var_declaration ::= 'global' 'variable' identifier ':' 'INT|FLOAT|STRING|BOOL'';'
 
-list_declaration       ::= list identifier ':' INT|FLOAT|STRING|BOOL list_assignment? ';'
+assignment      ::= (type)identifier ':=' expression|conditonal ';'
 
-assignment      ::= (type)identifier? ':=' expression|conditonal ';'
+list_declaration       ::= list identifier ':' INT|FLOAT|STRING|BOOL ';'
 		  
-list_assignment ::= (list)identifier? ':=' identifier ';' | '[' expression|conditonal
+list_assignment ::= (list)identifier ':=' identifier ';' | '[' expression|conditonal
 		          | ',' expression|conditonal
 		          | ']' ';'
 
@@ -61,7 +57,10 @@ term            ::= factor
                   | term ('&' | '|') factor -> int
 
 factor          ::= identifier
-                  | identifier '(' expression ')'
+                  | identifier '(' 
+                  | expression
+                  | , expression
+                  | ')'
                   | -INTLITERAL|-FLOATLITERAL
                   | BOOLLITERAL|INTLITERAL|FLOATLITERAL|STRLITERAL
                   | '(' expression ')'

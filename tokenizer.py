@@ -311,6 +311,7 @@ def tokenize(code):
                     state = TOKEN_COMMENT
                     if word == "//":
                         word = ""
+                        state = ""
                         break
                 else:
                     tokens = assignOperator(tokens, word, line_number)
