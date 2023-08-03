@@ -12,8 +12,6 @@ if __name__ == "__main__":
     tokens, error = Tokenize(src)
     if error: 
         print(error)
-    elif tokens.__contains__(TOKEN_OPERATOR) or tokens.__contains__(TOKEN_PUNCTUATION):
-        print("Tokenization Error") 
     else:
         nodes, error = ParseCode(tokens)
         if error:

@@ -37,12 +37,13 @@ TOKEN_LTHAN = 'LTHAN'
 TOKEN_GTHAN = 'GTHAN'
 TOKEN_GEQ = 'GEQ'
 TOKEN_LEQ = 'LEQ'
-TOKEN_LSHIFT = 'LSHIFT'
-TOKEN_RSHIFT = 'RSHIFT'
+# TOKEN_LSHIFT = 'LSHIFT'
+# TOKEN_RSHIFT = 'RSHIFT'
 TOKEN_NOT = 'NOT'
 TOKEN_NOTEQ = 'NOTEQ'
 TOKEN_BAND = 'BAND'
 TOKEN_BOR = 'BOR'
+TOKEN_BNOT = 'BNOT'
 TOKEN_AND = 'AND'
 TOKEN_OR = 'OR'
 #TOKEN_XOR = 'XOR'
@@ -148,10 +149,10 @@ class VariableAccessNode(): # this is for variable identifiers
         return f"{self.identifierToken.value}"
 
 class IfNode():
-    def __init__(self, conditional, body, otherNodes) -> None:
+    def __init__(self, conditional, body, otherNode) -> None:
         self.conditional = conditional
         self.body = body
-        self.otherNodes = otherNodes
+        self.otherNode = otherNode
     def __repr__(self) -> str:
         if self.otherNodes:
             return f"IF: {self.conditional}: {self.body}, {self.otherNodes}"
@@ -683,9 +684,9 @@ class Parser:
                         statements = res.reg(self.statement_list())
                         if res.error:
                             return res
-                        otherNodes = None
+                        otherNode = None
                         if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "else":
-                            otherNodes = res.reg(self.else_statement())
+                            otherNode = res.reg(self.else_statement())
                             if res.error:
                                 return res
                         if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "end":
@@ -697,7 +698,7 @@ class Parser:
                                 if self.currToken.type == TOKEN_SEMI:
                                     res.reg_adv()
                                     self.advance()
-                                    return res.success(IfNode(conditional, statements, otherNodes))
+                                    return res.success(IfNode(conditional, statements, otherNode))
                                 else:
                                     return res.fail(InvalidSyntax(self.currToken.line, "Expected ';' after 'if'"))
                             else:
@@ -805,7 +806,7 @@ class Parser:
         left = res.reg(self.factor())
         if res.error:
             return res
-        while self.currToken.type in [TOKEN_DIVIDE, TOKEN_MULTIPLY, TOKEN_BAND, TOKEN_BOR]:
+        while self.currToken.type in [TOKEN_DIVIDE, TOKEN_MULTIPLY, TOKEN_BAND, TOKEN_BOR, TOKEN_BNOT]:
             operation_token = self.currToken
             res.reg_adv()
             self.advance()

@@ -32,12 +32,13 @@ TOKEN_LTHAN = 'LTHAN'
 TOKEN_GTHAN = 'GTHAN'
 TOKEN_GEQ = 'GEQ'
 TOKEN_LEQ = 'LEQ'
-TOKEN_LSHIFT = 'LSHIFT'
-TOKEN_RSHIFT = 'RSHIFT'
+# TOKEN_LSHIFT = 'LSHIFT'
+# TOKEN_RSHIFT = 'RSHIFT'
 TOKEN_NOT = 'NOT'
 TOKEN_NOTEQ = 'NOTEQ'
 TOKEN_BAND = 'BAND'
 TOKEN_BOR = 'BOR'
+TOKEN_BNOT = 'BNOT'
 TOKEN_AND = 'AND'
 TOKEN_OR = 'OR'
 #TOKEN_XOR = 'XOR'
@@ -74,7 +75,7 @@ TOKEN_COMMENT = 'COMMENT'
 #              'switch', 'typedef', 'union', 'unsigned', 'volatile', 'while']
 # Keywords
 keywords = [ 'list', 'variable', 'global', 'procedure', 'begin', 'end', "program" , 'break', 'if', 
-             'then', 'else', "for", "true", "false", "is", "return"]
+             'then', 'else', "for", "true", "false", "is", "return", "not"]
 
 # Comment Operators
 comments = ['//', '/*', '*/']
@@ -86,7 +87,7 @@ types = [ 'bool', 'float', 'integer', 'string']
 # C Operators = [ '+', '-', '*', '/', '%','=', '+=', '=+', "-=", "=-", "*=", "=*", "/=", "=/", "%=", "=%", '++', "--",
 #              '<', '>', "<=", '>=', "<<", ">>", '!', '!=', '&', '|',  '&&', '||', '^', '~', '?', ':', "()", '{}', "[]" ]
 # C Operators
-operators = [ '+', '-', '*', '/', '%', '=',':=','==', ':', '<', '>', "<=", '>=', "<<", ">>", '!', '!=', '&', '|',  '&&', '||', "[]"]
+operators = [ '+', '-', '*', '/', '%', '=',':=','==', ':', '<', '>', "<=", '>=', '!', '!=', '&', '|',  '&&', '||', "[]"]
 
 # C punctuations = [';', ',', '(', ')', '{', '}', '[', ']']
 # Punctuation
@@ -153,10 +154,10 @@ def assignOperator(tokens, word, line_number):
         tokens.append(Token(TOKEN_LEQ, word, line_number))
     elif word == '>=':
         tokens.append(Token(TOKEN_GEQ, word, line_number))
-    elif word == '<<':
-        tokens.append(Token(TOKEN_LSHIFT, word, line_number))
-    elif word == '>>':
-        tokens.append(Token(TOKEN_RSHIFT, word, line_number))
+    # elif word == '<<':
+    #     tokens.append(Token(TOKEN_LSHIFT, word, line_number))
+    # elif word == '>>':
+    #     tokens.append(Token(TOKEN_RSHIFT, word, line_number))
     elif word == '!':
         tokens.append(Token(TOKEN_NOT, word, line_number))
     elif word == '!=':
@@ -252,6 +253,8 @@ def Tokenize(code):
                     if word.lower() in keywords:
                         if word.lower() in ["true", "false"]: 
                             tokens.append(Token(TOKEN_BOOLLITERAL, word.lower() , line_number))
+                        elif word.lower() == "not":
+                            tokens.append(Token(TOKEN_BNOT, word.lower() , line_number))
                         else:
                             tokens.append(Token(TOKEN_KEYWORD, word.lower() , line_number))
                         state = ""
@@ -343,6 +346,8 @@ def Tokenize(code):
             if word.lower() in keywords:
                 if word.lower() in ["true", "false"]: 
                     tokens.append(Token(TOKEN_BOOLLITERAL, word.lower() , line_number))
+                elif word.lower() == "not":
+                    tokens.append(Token(TOKEN_BNOT, word.lower() , line_number))
                 else:
                     tokens.append(Token(TOKEN_KEYWORD, word.lower(), line_number))
             elif word.lower() in types:
