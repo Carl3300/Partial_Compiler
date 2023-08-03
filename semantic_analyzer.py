@@ -1,18 +1,43 @@
 # Type Operations
 from code_parser import BinaryOpNode, BooleanNode, ElseNode, FloatNode, ForNode, FunctionAccessNode, FunctionDefinitionNode, GlobalVariableCreationNode, IfNode, IntNode, ProgramNode, ReturnNode, StringNode, UnaryOpNode, VariableAccessNode, VariableAssignmentNode, VariableCreationNode
+from error import InvalidSemantics, ProgramError
 from tokenizer import Token
+
 
 # Symbol Table Definition
 class SymbolTable:
     def __init__(self):
-        self.symbols = {}
+        self.scopes = [{}]
+        self.define_base_functions()
 
-    def add_symbol(self, name, data_type):
-        self.symbols[name] = data_type
+    def add_symbol(self, name, data_type, is_global=False):
+        if is_global:
+            self.scopes[0][name] = data_type
+        else:
+            self.scopes[-1][name] = data_type
 
     def get_symbol_type(self, name):
-        return self.symbols.get(name)
+        for scope in reversed(self.scopes):
+            if name in scope:
+                return scope[name]
+        return None
 
+    def get_global_declarations(self, name):
+        return self.scopes[0][name]
+
+    def enter_scope(self):
+        self.scopes.append({})
+
+    def leave_scope(self):
+        if len(self.scopes) > 1:
+            return self.scopes.pop()
+        
+    def define_base_functions(self):
+        self.add_symbol("putBool", ["bool", "bool"])
+        self.add_symbol("putInteger", ["bool", "integer"])
+        self.add_symbol("putFloat", ["bool", "float"])
+        self.add_symbol("putString", ["bool", "string"])
+        self.add_symbol("sqrt", ["float", "integer"])
 
 class SemanticAnalyzer:
     def __init__(self):
@@ -58,37 +83,53 @@ class SemanticAnalyzer:
         elif isinstance(node, ProgramNode):
             return self.visit_programNode(node)
         else:
-            self.errors.append(f"Node Handling Not Implimented Yet")
+            self.errors.append(ProgramError(f"Compiler Error Unexpected Parse Result"))
             return None
 
     def visit_binaryOpNode(self, node):
         pass
 
     def visit_unaryOpNode(self, node):
-        pass
+        type_ = self.visit(node.node)
+        if type_ in ["string", "bool"]:
+            self.errors.append(InvalidSemantics(node.op_token.line, f"Cannot assign negative value to boolean or string"))
+            return type_
+        return type_
 
     def visit_variableAssignmentNode(self, node):    
-        pass 
+        variableType = self.symbol_table.get_symbol_type(node.identifierToken.value)
+        if not variableType:
+            self.errors.append(InvalidSemantics(node.identifierToken.line, f"Variable referenced before assignment"))
+            return None
+        type_assigned = self.visit(node.valueToken)
+        pass # add in int can be float and those semantics checks here
+        if variableType != type_assigned:
+            self.errors.append(InvalidSemantics(node.identifierToken.line, f"Expected variable assignment of type {variableType} but got type {type_assigned}"))
+            return None   
 
     def visit_variableCreationNode(self, node):
         variable_identifier = node.identifierToken.value
-        variable_type = node.type
-        variable_isList = node.isList
-        variable_size = node.size
+        variable_type = node.type.value
+        pass # list stuff
         self.symbol_table.add_symbol(variable_identifier, variable_type)
         return variable_type
     
     def visit_globalVariableCreationNode(self, node):
         global_variable_identifier = node.identifierToken.value
         global_variable_type = node.type
-        global_variable_isList = node.isList
-        global_variable_size = node.size
-        pass # ensure no overlapping globals 
-        self.symbol_table.add_symbol(global_variable_identifier, global_variable_type)
-        return global_variable_type
+        nameTaken = self.symbol_table.get_global_declarations(global_variable_identifier)
+        pass # list stuff
+        if nameTaken:
+            self.errors.append(InvalidSemantics(node.identifierToken.line, f"Names can only be used once for global declarations"))
+            return None
+        self.symbol_table.add_symbol(global_variable_identifier, global_variable_type, True)
 
     def visit_variableAccessNode(self, node):
-        pass
+        variableType = self.symbol_table.get_symbol_type(node.identifierToken.value)
+        if not variableType:
+            self.errors.append(InvalidSemantics(node.identifierToken.line, f"Variable referenced before assignment"))
+            return None
+        return variableType
 
     def visit_ifNode(self, node):
         pass
@@ -100,23 +141,39 @@ class SemanticAnalyzer:
         pass
 
     def visit_functionDefinition(self, node):
-        function_declarations = node.declarations
-        function_statements = node.statement_list
-        function_identifier = node.identifier.value
-        function_type = node.type
-        pass # ensure return type is correct, add global functions
-        self.symbol_table.add_symbol(function_identifier, function_type)
-        
-        for definition in function_declarations:
+        function_name = node.identifier.value
+        types = []
+        types.append(node.type.value)
+
+        self.symbol_table.add_symbol(function_name, types)
+        self.symbol_table.enter_scope()
+
+        if node.variables:
+            for var in node.variables:
+                types.append(self.visit(var))
+
+        for definition in node.declarations:
             self.visit(definition)
 
-        for statement in function_statements:
+        for statement in node.statements:
             self.visit(statement)
 
-        return function_type
+        self.symbol_table.leave_scope()
+        self.symbol_table.add_symbol(function_name, types)
 
     def visit_functionAccessNode(self, node):
-        pass
+        variableType = self.symbol_table.get_symbol_type(node.identifier.value)
+
+        if not variableType:
+            self.errors.append(InvalidSemantics(node.identifierToken.line, f"Function referenced before assignment"))
+            return None
+        type_ = self.visit(node.variables) # modify so it can work with multiple variables in functions
+        vars2 = variableType[1:]
+
+        if vars2.__contains__(type_):
+            self.errors.append(InvalidSemantics(node.identifierToken.line, f"Mismatched Function Type, type(s) expected: {variableType}; type(s) recieved: {type_}"))
+            return variableType
+        return variableType[0]
 
     def visit_returnNode(self, node):
         pass
@@ -131,10 +188,14 @@ class SemanticAnalyzer:
 
         for statement in program_statements:
             self.visit(statement)
-        return 0
 
 def Analyze_Code(ast):
     analyzer = SemanticAnalyzer()
+    # ast = [ VariableCreationNode("integer", Token("IDENTIFIER", "a", 1)),
+    #         VariableAssignmentNode((Token("IDENTIFIER", "a", 1)), (UnaryOpNode(Token("MINUS", "-", 1), FloatNode(Token("INTLITERAL", 5, 1)))))]
+    # for a in ast:
+    #     analyzer.analyze(a)
+
     analyzer.analyze(ast)
 
     if analyzer.errors:

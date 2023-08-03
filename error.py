@@ -14,6 +14,10 @@ class InvalidSemantics(Error):
     def __init__(self, line, details) -> None:
         super().__init__("Invalid Syntax", line, details)
 
+class ProgramError(Error):
+    def __init__(self, line, details) -> None:
+        super().__init__("Program Error", line, details)
+
 class BlankFile():
     def __init__(self) -> None:
         pass

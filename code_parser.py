@@ -124,8 +124,8 @@ class VariableCreationNode():
         self.size = list_size
     def __repr__(self) -> str:
         if self.isList:
-            return f"List: {self.identifierToken.value}: {self.type} - Size: {self.size}"
-        return f"{self.identifierToken.value}: {self.type}"
+            return f"List: {self.identifierToken.value}: {self.type.value} - Size: {self.size}"
+        return f"{self.identifierToken.value}: {self.type.value}"
 
 class GlobalVariableCreationNode():
     def __init__(self, type_, identifierToken, isList=False, list_size=None) -> None:
@@ -135,8 +135,8 @@ class GlobalVariableCreationNode():
         self.size = list_size
     def __repr__(self) -> str:
         if self.isList:
-            return f"List: {self.identifierToken.value}: {self.type} - Size: {self.size}"
-        return f"{self.identifierToken.value}: {self.type}"
+            return f"List: {self.identifierToken.value}: {self.type.value} - Size: {self.size}"
+        return f"{self.identifierToken.value}: {self.type.value}"
 
 class VariableAccessNode(): # this is for variable identifiers
     def __init__(self, identifierToken , index=None) -> None:
@@ -173,11 +173,12 @@ class ForNode():
 
 # Functions
 class FunctionDefinitionNode():
-    def __init__(self, identifier, type_, procedure_list, statement_list) -> None:
+    def __init__(self, identifier, type_, procedure_list, statement_list, variables=None) -> None:
         self.declarations = procedure_list
         self.statements = statement_list
         self.identifier = identifier
         self.type = type_
+        self.variables = variables
     def __repr__(self) -> str:
         return f"Function {self.identifier.value} - {self.declarations}: {self.statements}"
 
@@ -411,7 +412,7 @@ class Parser:
                     res.reg_adv()
                     self.advance()
                     if self.currToken.type == TOKEN_TYPE:
-                        type_ = self.currToken.value
+                        type_ = self.currToken
                         res.reg_adv()
                         self.advance()
                         if self.currToken.type == TOKEN_LPAREN:
@@ -449,7 +450,7 @@ class Parser:
                                                 if self.currToken.type == TOKEN_SEMI:
                                                     res.reg_adv()
                                                     self.advance()
-                                                    return res.success(FunctionDefinitionNode(identifier, type_, procedure_list, statement_list)) # make this acutally return
+                                                    return res.success(FunctionDefinitionNode(identifier, type_, procedure_list, statement_list, variables)) # make this acutally return
                                                 else:
                                                     return res.fail(InvalidSyntax(self.currToken.line, "Expected a ';' after procedure"))
                                             else:
@@ -520,7 +521,7 @@ class Parser:
                     res.reg_adv()
                     self.advance()
                     if self.currToken.type == TOKEN_TYPE:
-                        type_ = self.currToken.value
+                        type_ = self.currToken
                         res.reg_adv()
                         self.advance()
                         if self.currToken.type == TOKEN_LBRACKET:
@@ -581,7 +582,7 @@ class Parser:
                         res.reg_adv()
                         self.advance()
                         if self.currToken.type == TOKEN_TYPE:
-                            type_ = self.currToken.value
+                            type_ = self.currToken
                             res.reg_adv()
                             self.advance()
                             if self.currToken.type == TOKEN_LBRACKET:

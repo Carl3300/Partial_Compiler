@@ -19,4 +19,6 @@ if __name__ == "__main__":
         if error:
             print(error)
         else:
-            Analyze_Code(nodes)
+            correct = Analyze_Code(nodes)
+            if correct:
+                print("nice you did it")
