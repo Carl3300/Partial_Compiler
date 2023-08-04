@@ -19,5 +19,6 @@ if __name__ == "__main__":
         else:
             correct = Analyze_Code(nodes)
             if correct:
-                print("nice you did it")
-            pass
+                print("Analysis Successful")
+            else:
+                pass
