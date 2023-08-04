@@ -207,33 +207,18 @@ class Result:
     def __init__(self) -> None:
         self.error = None
         self.node = None
-        self.last_reg_adv = 0
-        self.adv_count = 0
-        self.reverse_count = 0
-
-    def reg_adv(self):
-        self.last_reg_adv= 1
-        self.adv_count += 1
 
     def reg(self, res):
-        self.last_reg_adv = res.adv_count
-        self.adv_count += res.adv_count
         if res.error: 
             self.error = res.error
         return res.node
-
-    def try_reg(self, res):
-        if res.error:
-          self.reverse_count = res.adv_count
-          return None
-        return self.register(res)
 
     def success(self, node):
         self.node = node
         return self
 
     def fail(self, error):
-        if not self.error or self.last_reg_adv == 0:
+        if not self.error:
             self.error = error
         return self
 
@@ -251,7 +236,6 @@ class Parser:
 
     def Parse(self):
         res = self.program()
-        res.reg_adv()
         self.advance()
         if not res.error and self.currToken.type != TOKEN_EOF:
             return res.fail(InvalidSyntax(self.currToken.line, f"'{self.currToken.value}' Token out of proper context"))
@@ -260,32 +244,25 @@ class Parser:
     def program(self):
         res = Result()
         if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "program":
-            res.reg_adv()
             self.advance()
             if self.currToken.type == TOKEN_IDENTIFIER:
                 identifier = self.currToken
-                res.reg_adv()
                 self.advance()
                 if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "is":
-                    res.reg_adv()
                     self.advance()
                     procedure_list = res.reg(self.program_procedure_list())
                     if res.error:
                         return res
                     if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "begin":
-                        res.reg_adv()
                         self.advance()
                         statement_list = res.reg(self.statement_list())
                         if res.error:
                             return res
                         if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "end":
-                            res.reg_adv()
                             self.advance()
                             if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "program":
-                                res.reg_adv()
                                 self.advance()
                                 if self.currToken.type == TOKEN_PERIOD:
-                                    res.reg_adv()
                                     self.advance()
                                     return res.success(ProgramNode(identifier, procedure_list, statement_list))
                                 else:
@@ -385,13 +362,11 @@ class Parser:
             return res.success(val)
         elif curr.type == TOKEN_KEYWORD and curr.value == "return":
             line_num = curr.line
-            res.reg_adv()
             self.advance()
             expression = res.reg(self.expression())
             if res.error:
                 return res
             if self.currToken.type == TOKEN_SEMI:
-                res.reg_adv()
                 self.advance()
                 return res.success(ReturnNode(expression, line_num))
         else:
@@ -400,21 +375,16 @@ class Parser:
     def funct_definition(self, Global=False):
         res = Result()
         if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "procedure":
-            res.reg_adv()
             self.advance()
             if self.currToken.type == TOKEN_IDENTIFIER:
                 identifier = self.currToken
-                res.reg_adv()
                 self.advance()
                 if self.currToken.type == TOKEN_COLON:
-                    res.reg_adv()
                     self.advance()
                     if self.currToken.type == TOKEN_TYPE:
                         type_ = self.currToken
-                        res.reg_adv()
                         self.advance()
                         if self.currToken.type == TOKEN_LPAREN:
-                            res.reg_adv()
                             self.advance()
                             if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "variable":
                                 variables = []
@@ -428,25 +398,20 @@ class Parser:
                                     if res.error:
                                         return res
                                 if self.currToken.type == TOKEN_RPAREN:
-                                    res.reg_adv()
                                     self.advance()
                                     procedure_list = res.reg(self.procedure_list())
                                     if res.error:
                                         return res
                                     if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "begin":
-                                        res.reg_adv()
                                         self.advance()
                                         statement_list = res.reg(self.statement_list())
                                         if res.error:
                                             return res
                                         if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "end":
-                                            res.reg_adv()
                                             self.advance()
                                             if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "procedure":
-                                                res.reg_adv()
                                                 self.advance()
                                                 if self.currToken.type == TOKEN_SEMI:
-                                                    res.reg_adv()
                                                     self.advance()
                                                     if Global:
                                                         return res.success(GlobalFunctionDefinitionNode(identifier, type_, procedure_list, statement_list, variables))
@@ -462,25 +427,20 @@ class Parser:
                                 else:
                                     return res.fail(InvalidSyntax(self.currToken.line, "Expected a ')'"))
                             elif self.currToken.type == TOKEN_RPAREN:
-                                res.reg_adv()
                                 self.advance()
                                 procedure_list = res.reg(self.procedure_list())
                                 if res.error:
                                     return res
                                 if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "begin":
-                                    res.reg_adv()
                                     self.advance()
                                     statement_list = res.reg(self.statement_list())
                                     if res.error:
                                         return res
                                     if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "end":
-                                        res.reg_adv()
                                         self.advance()
                                         if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "procedure":
-                                            res.reg_adv()
                                             self.advance()
                                             if self.currToken.type == TOKEN_SEMI:
-                                                res.reg_adv()
                                                 self.advance()
                                                 if Global:
                                                     return res.success(GlobalFunctionDefinitionNode(identifier, type_, procedure_list, statement_list))
@@ -513,31 +473,23 @@ class Parser:
         res = Result()
         curr = self.currToken
         if curr.type == TOKEN_KEYWORD and curr.value == "variable":
-            res.reg_adv()
             self.advance()
             if self.currToken.type == TOKEN_IDENTIFIER:
                 identifier = self.currToken
-                res.reg_adv()
                 self.advance()
                 if self.currToken.type == TOKEN_COLON:
-                    res.reg_adv()
                     self.advance()
                     if self.currToken.type == TOKEN_TYPE:
                         type_ = self.currToken
-                        res.reg_adv()
                         self.advance()
                         if self.currToken.type == TOKEN_LBRACKET:
-                            res.reg_adv()
                             self.advance()
                             if self.currToken.type == TOKEN_INTLITERAL:
                                 int_literal = self.currToken
-                                res.reg_adv()
                                 self.advance()
                                 if self.currToken.type == TOKEN_RBRACKET:
-                                    res.reg_adv()
                                     self.advance()
                                     if self.currToken.type == TOKEN_SEMI:
-                                        res.reg_adv()
                                         self.advance()
                                         if Global:
                                             return res.success(GlobalVariableCreationNode(type_, identifier, True, int_literal))
@@ -549,7 +501,6 @@ class Parser:
                             else:
                                 return res.fail(InvalidSyntax(self.currToken.line, "Expected a list size"))
                         elif self.currToken.type == TOKEN_SEMI:
-                            res.reg_adv()
                             self.advance()
                             if Global:
                                 return res.success(GlobalVariableCreationNode(type_, identifier))
@@ -571,7 +522,6 @@ class Parser:
         res = Result()
         curr = self.currToken
         if curr.type == TOKEN_KEYWORD and curr.value == "global":
-            res.reg_adv()
             self.advance()
             if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "procedure":
                 global_function = res.reg(self.funct_definition(True))
@@ -579,31 +529,23 @@ class Parser:
                     return res
                 return res.success(global_function)
             elif self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "variable":
-                res.reg_adv()
                 self.advance()
                 if self.currToken.type == TOKEN_IDENTIFIER:
                     identifier = self.currToken
-                    res.reg_adv()
                     self.advance()
                     if self.currToken.type == TOKEN_COLON:
-                        res.reg_adv()
                         self.advance()
                         if self.currToken.type == TOKEN_TYPE:
                             type_ = self.currToken
-                            res.reg_adv()
                             self.advance()
                             if self.currToken.type == TOKEN_LBRACKET:
-                                res.reg_adv()
                                 self.advance()
                                 if self.currToken.type == TOKEN_INTLITERAL:
                                     int_literal = self.currToken
-                                    res.reg_adv()
                                     self.advance()
                                     if self.currToken.type == TOKEN_RBRACKET:
-                                        res.reg_adv()
                                         self.advance()
                                         if self.currToken.type == TOKEN_SEMI:
-                                            res.reg_adv()
                                             self.advance()
                                             return res.success(GlobalVariableCreationNode(type_, identifier, True, int_literal))
                                         else:
@@ -613,7 +555,6 @@ class Parser:
                                 else:
                                     return res.fail(InvalidSyntax(self.currToken.line, "Expected a list size"))
                             elif self.currToken.type == TOKEN_SEMI:
-                                res.reg_adv()
                                 self.advance()
                                 return res.success(GlobalVariableCreationNode(type_, identifier, False))
                             else:
@@ -633,31 +574,25 @@ class Parser:
         res = Result()
         if self.currToken.type == TOKEN_IDENTIFIER:
             identifier =  self.currToken
-            res.reg_adv()
             self.advance()
             int_literal = None
             if self.currToken.type == TOKEN_LBRACKET:
-                res.reg_adv()
                 self.advance()
                 if self.currToken.type == TOKEN_INTLITERAL:
                     int_literal = self.currToken
-                    res.reg_adv()
                     self.advance()
                     if self.currToken.type == TOKEN_RBRACKET:
-                        res.reg_adv()
                         self.advance()
                     else:
                         return res.fail(InvalidSyntax(self.currToken.line, "Expected ']' to close array indexing"))
                 else:
                     return res.fail(InvalidSyntax(self.currToken.line, "Expected integer for array indexing"))
             if self.currToken.type == TOKEN_ASSIGN:
-                res.reg_adv()
                 self.advance()
                 condition = res.reg(self.condition())
                 if res.error:
                     return res
                 if self.currToken.type == TOKEN_SEMI:
-                    res.reg_adv()
                     self.advance()
                     if int_literal:
                         return res.success(VariableAssignmentNode(identifier, condition, int_literal))
@@ -673,20 +608,16 @@ class Parser:
         res = Result()
         curr = self.currToken
         if curr.type == TOKEN_KEYWORD and curr.value == "if":
-            res.reg_adv()
             self.advance()
             if self.currToken.type == TOKEN_LPAREN:
-                res.reg_adv()
                 self.advance()
                 line_num = self.currToken.line
                 conditional = res.reg(self.condition())
                 if res.error:
                     return res
                 if self.currToken.type == TOKEN_RPAREN:
-                    res.reg_adv()
                     self.advance()
                     if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == 'then':
-                        res.reg_adv()
                         self.advance()
                         statements = res.reg(self.statement_list())
                         if res.error:
@@ -697,13 +628,10 @@ class Parser:
                             if res.error:
                                 return res
                         if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "end":
-                            res.reg_adv()
                             self.advance()
                             if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "if":
-                                res.reg_adv()
                                 self.advance()
                                 if self.currToken.type == TOKEN_SEMI:
-                                    res.reg_adv()
                                     self.advance()
                                     return res.success(IfNode(conditional, statements, otherNode, line_num))
                                 else:
@@ -725,7 +653,6 @@ class Parser:
         res = Result()
         curr = self.currToken
         if curr.type == TOKEN_KEYWORD and curr.value == "else":
-            res.reg_adv()
             self.advance()
             statements = res.reg(self.statement_list())
             if res.error:
@@ -738,10 +665,8 @@ class Parser:
         res = Result()
         curr = self.currToken
         if curr.type == TOKEN_KEYWORD and curr.value == "for":
-            res.reg_adv()
             self.advance()
             if self.currToken.type == TOKEN_LPAREN:
-                res.reg_adv()
                 self.advance()
                 if self.currToken.type == TOKEN_IDENTIFIER:
                     var = res.reg(self.assignment())
@@ -754,19 +679,15 @@ class Parser:
                 if res.error:
                     return res
                 if self.currToken.type == TOKEN_RPAREN:
-                    res.reg_adv()
                     self.advance()
                     statements = res.reg(self.statement_list())
                     if res.error:
                         return res
                     if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "end":
-                        res.reg_adv()
                         self.advance()
                         if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "for":
-                            res.reg_adv()
                             self.advance()
                             if self.currToken.type == TOKEN_SEMI:
-                                res.reg_adv()
                                 self.advance()
                                 return res.success(ForNode(var, conditional, statements, line_num))
                             else:
@@ -790,7 +711,6 @@ class Parser:
             return res
         if self.currToken.type in [TOKEN_EQ, TOKEN_GTHAN, TOKEN_LTHAN, TOKEN_GEQ, TOKEN_LEQ]:
             operation_token = self.currToken
-            res.reg_adv()
             self.advance()
             right = res.reg(self.expression())
             left = BinaryOpNode(left, operation_token, right)
@@ -803,7 +723,6 @@ class Parser:
             return res
         while self.currToken.type in [TOKEN_PLUS, TOKEN_MINUS]:
             operation_token = self.currToken
-            res.reg_adv()
             self.advance()
             right = res.reg(self.term())
             left = BinaryOpNode(left, operation_token, right)
@@ -816,7 +735,6 @@ class Parser:
             return res
         while self.currToken.type in [TOKEN_DIVIDE, TOKEN_MULTIPLY, TOKEN_BAND, TOKEN_BOR, TOKEN_BNOT]:
             operation_token = self.currToken
-            res.reg_adv()
             self.advance()
             right = res.reg(self.factor())
             left = BinaryOpNode(left, operation_token, right)
@@ -827,7 +745,6 @@ class Parser:
         curr = self.currToken
 
         if curr.type == TOKEN_MINUS:
-            res.reg_adv()
             self.advance()
             factor = res.reg(self.factor())
             if res.error:
@@ -835,31 +752,25 @@ class Parser:
             return res.success(UnaryOpNode(curr, factor))
 
         if curr.type == TOKEN_INTLITERAL:
-            res.reg_adv()
             self.advance()
             return res.success(IntNode(curr))
 
         elif curr.type == TOKEN_FLOATLITERAL:
-            res.reg_adv()
             self.advance()
             return res.success(FloatNode(curr))
 
         elif curr.type in [TOKEN_STRLITERAL]:
-            res.reg_adv()
             self.advance()
             return res.success(StringNode(curr))
 
         elif curr.type in [TOKEN_BOOLLITERAL]:
-            res.reg_adv()
             self.advance()
             return res.success(BooleanNode(curr))
 
         elif curr.type in [TOKEN_IDENTIFIER]:
             identifier = curr
-            res.reg_adv()
             self.advance()
             if self.currToken.type == TOKEN_LPAREN:
-                res.reg_adv()
                 self.advance()
                 expression = None
                 if self.currToken.type != TOKEN_RPAREN:
@@ -867,20 +778,16 @@ class Parser:
                     if res.error:
                         return res
                 if self.currToken.type == TOKEN_RPAREN:
-                    res.reg_adv()
                     self.advance()
                     return res.success(FunctionAccessNode(identifier, expression))
                 else:
                     return res.fail(InvalidSyntax(self.currToken.line, "Excpected a ')'"))
             if self.currToken.type == TOKEN_LBRACKET:
-                res.reg_adv()
                 self.advance()
                 if self.currToken.type == TOKEN_INTLITERAL:
                     index = self.currToken
-                    res.reg_adv()
                     self.advance()
                     if self.currToken.type == TOKEN_RBRACKET:
-                        res.reg_adv()
                         self.advance()
                         return res.success(VariableAccessNode(identifier, index))
                     else:
@@ -890,13 +797,11 @@ class Parser:
             return res.success(VariableAccessNode(curr))
 
         elif curr.type in [TOKEN_LPAREN]:
-            res.reg_adv()
             self.advance()
             expression = res.reg(self.expression())
             if res.error:
                 return res
             if self.currToken.type == TOKEN_RPAREN:
-                res.reg_adv()
                 self.advance()
                 return res.success(expression)
             else:

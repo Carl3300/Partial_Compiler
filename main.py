@@ -8,7 +8,7 @@ TEST_FILE = "./testPgms/correct/math.src"
 TEST_ERROR = "./testPgms/incorrect/test2.src"
 
 if __name__ == "__main__":
-    src = open(TEST_ERROR).read().splitlines()
+    src = open(TEST_FILE).read().splitlines()
     tokens, error = Tokenize(src)
     if error: 
         print(error)
