@@ -257,7 +257,7 @@ class SemanticAnalyzer:
     
     def visit_globalVariableCreationNode(self, node):
         global_variable_identifier = node.identifierToken.value
-        global_variable_type = node.type
+        global_variable_type = node.type.value
         nameTaken = self.symbol_table.get_global_declarations(global_variable_identifier)
         if node.isList:
             if not node.size:
@@ -269,7 +269,7 @@ class SemanticAnalyzer:
             if nameTaken:
                 self.errors.append(InvalidSemantics(node.identifierToken.line, f"Names can only be used once for global declarations"))
                 return
-            self.symbol_table.add_symbol(global_variable_identifier, global_variable_type.value, True)
+            self.symbol_table.add_symbol(global_variable_identifier, global_variable_type, True)
 
     def visit_variableAccessNode(self, node):
         variableType = self.symbol_table.get_symbol_type(node.identifierToken.value)
@@ -395,9 +395,8 @@ class SemanticAnalyzer:
             else:
                 var_types = self.visit(node.variables)
         else:
-            var_types = None
-
-        func_var_types = self.symbol_table.get_function_symbol_type(node.identifier.value)
+            if not need_list:
+                var_types = None
         
         if func_var_types != var_types:
             self.errors.append(InvalidSemantics(node.identifier.line, f"Function call variables do not match typing of function declaration"))
@@ -412,7 +411,11 @@ class SemanticAnalyzer:
         if not self.symbol_table.current_func_type:
             self.errors.append(InvalidSemantics(node.line, f"Return statement used before function definition"))
             return
-        if expression != self.symbol_table.current_func_type:
+        if expression == INT and self.symbol_table.current_func_type == FLOAT:
+            return FLOAT
+        elif expression == FLOAT and self.symbol_table.current_func_type == INT:
+            return INT
+        elif expression != self.symbol_table.current_func_type:
             self.errors.append(InvalidSemantics(node.line, f"Return statement statement type {expression} does not match function type {self.symbol_table.current_func_type}"))
             return
         return expression

@@ -4,11 +4,11 @@ from semantic_analyzer import Analyze_Code
 
 TOKEN_OPERATOR = 'OPERATOR'
 TOKEN_PUNCTUATION = 'PUNCTUATION'
-TEST_FILE = "./testPgms/correct/test1.src"
-TEST_ERROR = "./testPgms/incorrect/test1.src"
+TEST_FILE = "./testPgms/correct/math.src"
+TEST_ERROR = "./testPgms/incorrect/test2.src"
 
 if __name__ == "__main__":
-    src = open(TEST_FILE).read().splitlines()
+    src = open(TEST_ERROR).read().splitlines()
     tokens, error = Tokenize(src)
     if error: 
         print(error)
