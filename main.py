@@ -4,7 +4,7 @@ from semantic_analyzer import Analyze_Code
 
 TOKEN_OPERATOR = 'OPERATOR'
 TOKEN_PUNCTUATION = 'PUNCTUATION'
-TEST_FILE = "./testPgms/correct/test1.src"
+TEST_FILE = "./testPgms/correct/iterativeFib.src"
 TEST_ERROR = "./testPgms/incorrect/test1.src"
 
 if __name__ == "__main__":
