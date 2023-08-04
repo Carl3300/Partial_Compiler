@@ -225,6 +225,9 @@ class SemanticAnalyzer:
             if int(node.index.value) > int(size.value):
                 self.errors.append(InvalidSemantics(node.identifierToken.line, f"Index out of range for list"))
                 return
+            if node.index.value:
+                variableType = variableType[1]
+        
         if variableType == INT and type_assigned == FLOAT:
             return INT
         elif variableType == FLOAT and type_assigned == INT:
@@ -273,6 +276,8 @@ class SemanticAnalyzer:
         if not variableType:
             self.errors.append(InvalidSemantics(node.identifierToken.line, f"Variable referenced before assignment"))
             return None
+        if node.index:
+            return variableType[1]
         return variableType
 
     def visit_ifNode(self, node):
@@ -296,7 +301,7 @@ class SemanticAnalyzer:
         self.visit(node.variable)
         conditional = self.visit(node.conditional)
         if conditional != BOOL:
-            self.errors.append(InvalidSemantics(node.identifierToken.line, f"Condtional must be of type Boolean for a if statement"))
+            self.errors.append(InvalidSemantics(node.line, f"Condtional must be of type Boolean for a if statement"))
             self.symbol_table.leave_scope()
             return None
         if node.body:
@@ -405,10 +410,10 @@ class SemanticAnalyzer:
     def visit_returnNode(self, node):
         expression = self.visit(node.expression)
         if not self.symbol_table.current_func_type:
-            self.errors.append(InvalidSemantics(node.identifier.line, f"Return statement used before function definition"))
+            self.errors.append(InvalidSemantics(node.line, f"Return statement used before function definition"))
             return
         if expression != self.symbol_table.current_func_type:
-            self.errors.append(InvalidSemantics(node.identifier.line, f"Return statement statement type {expression} does not match function type {self.symbol_table.current_func_type}"))
+            self.errors.append(InvalidSemantics(node.line, f"Return statement statement type {expression} does not match function type {self.symbol_table.current_func_type}"))
             return
         return expression
 

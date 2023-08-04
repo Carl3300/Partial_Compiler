@@ -132,10 +132,11 @@ class VariableAccessNode():
         return f"{self.identifierToken.value}"
 
 class IfNode():
-    def __init__(self, conditional, body, otherNode) -> None:
+    def __init__(self, conditional, body, otherNode, line_num) -> None:
         self.conditional = conditional
         self.body = body
         self.otherNode = otherNode
+        self.line = line_num
     def __repr__(self) -> str:
         if self.otherNodes:
             return f"IF: {self.conditional}: {self.body}, {self.otherNodes}"
@@ -148,10 +149,11 @@ class ElseNode():
         return f"Else: {self.body}"
 
 class ForNode():
-    def __init__(self, variable, conditional, body) -> None:
+    def __init__(self, variable, conditional, body, line_num) -> None:
         self.variable = variable
         self.conditional = conditional
         self.body = body
+        self.line = line_num
     def __repr__(self) -> str:
         return f"For: ({self.variable}, {self.conditional}): {self.body}"
 
@@ -186,8 +188,9 @@ class FunctionAccessNode():
         return f"Function {self.identifier.value}"
 
 class ReturnNode():
-    def __init__(self, expression) -> None:
+    def __init__(self, expression, line_num) -> None:
         self.expression = expression
+        self.line = line_num
     def __repr__(self) -> str:
         return f"{self.expression}"
 
@@ -381,6 +384,7 @@ class Parser:
                 return res
             return res.success(val)
         elif curr.type == TOKEN_KEYWORD and curr.value == "return":
+            line_num = curr.line
             res.reg_adv()
             self.advance()
             expression = res.reg(self.expression())
@@ -389,7 +393,7 @@ class Parser:
             if self.currToken.type == TOKEN_SEMI:
                 res.reg_adv()
                 self.advance()
-                return res.success(ReturnNode(expression))
+                return res.success(ReturnNode(expression, line_num))
         else:
             return res.fail(InvalidSyntax(curr.line, f"Invalid Statement declaration {self.currToken.value} maybe keyword 'end' was desired"))   
 
@@ -674,6 +678,7 @@ class Parser:
             if self.currToken.type == TOKEN_LPAREN:
                 res.reg_adv()
                 self.advance()
+                line_num = self.currToken.line
                 conditional = res.reg(self.condition())
                 if res.error:
                     return res
@@ -700,7 +705,7 @@ class Parser:
                                 if self.currToken.type == TOKEN_SEMI:
                                     res.reg_adv()
                                     self.advance()
-                                    return res.success(IfNode(conditional, statements, otherNode))
+                                    return res.success(IfNode(conditional, statements, otherNode, line_num))
                                 else:
                                     return res.fail(InvalidSyntax(self.currToken.line, "Expected ';' after 'if'"))
                             else:
@@ -744,6 +749,7 @@ class Parser:
                     var = res.reg(self.variable_declaration())
                 else:
                     return res.fail(InvalidSyntax(curr.line, "Expected a variable declaration or assigment"))
+                line_num = self.currToken.line
                 conditional = res.reg(self.condition())
                 if res.error:
                     return res
@@ -762,7 +768,7 @@ class Parser:
                             if self.currToken.type == TOKEN_SEMI:
                                 res.reg_adv()
                                 self.advance()
-                                return res.success(ForNode(var, conditional, statements))
+                                return res.success(ForNode(var, conditional, statements, line_num))
                             else:
                                 return res.fail(InvalidSyntax(self.currToken.line, "Expected ';' after for"))
                         else:
