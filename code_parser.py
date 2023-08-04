@@ -183,6 +183,16 @@ class FunctionDefinitionNode():
     def __repr__(self) -> str:
         return f"Function {self.identifier.value} - {self.declarations}: {self.statements}"
 
+class GlobalFunctionDefinitionNode():
+    def __init__(self, identifier, type_, procedure_list, statement_list, variables=None) -> None:
+        self.declarations = procedure_list
+        self.statements = statement_list
+        self.identifier = identifier
+        self.type = type_
+        self.variables = variables
+    def __repr__(self) -> str:
+        return f"Function {self.identifier.value} - {self.declarations}: {self.statements}"
+
 class FunctionAccessNode():
     def __init__(self, identifier, variables) -> None:
         self.identifier = identifier
@@ -400,7 +410,7 @@ class Parser:
         else:
             return res.fail(InvalidSyntax(curr.line, f"Invalid Statement declaration {self.currToken.value} maybe keyword 'end' was desired"))   
 
-    def funct_definition(self):
+    def funct_definition(self, Global=False):
         res = Result()
         if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "procedure":
             res.reg_adv()
@@ -451,6 +461,8 @@ class Parser:
                                                 if self.currToken.type == TOKEN_SEMI:
                                                     res.reg_adv()
                                                     self.advance()
+                                                    if Global:
+                                                        return res.success(GlobalFunctionDefinitionNode(identifier, type_, procedure_list, statement_list, variables))
                                                     return res.success(FunctionDefinitionNode(identifier, type_, procedure_list, statement_list, variables)) # make this acutally return
                                                 else:
                                                     return res.fail(InvalidSyntax(self.currToken.line, "Expected a ';' after procedure"))
@@ -483,6 +495,8 @@ class Parser:
                                             if self.currToken.type == TOKEN_SEMI:
                                                 res.reg_adv()
                                                 self.advance()
+                                                if Global:
+                                                    return res.success(GlobalFunctionDefinitionNode(identifier, type_, procedure_list, statement_list))
                                                 return res.success(FunctionDefinitionNode(identifier, type_, procedure_list, statement_list)) # make this acutally return
                                             else:
                                                 return res.fail(InvalidSyntax(self.currToken.line, "Expected a ';' after procedure"))
@@ -572,7 +586,12 @@ class Parser:
         if curr.type == TOKEN_KEYWORD and curr.value == "global":
             res.reg_adv()
             self.advance()
-            if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "variable":
+            if self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "procedure":
+                global_function = res.reg(self.funct_definition(True))
+                if res.error:
+                    return res
+                return res.success(global_function)
+            elif self.currToken.type == TOKEN_KEYWORD and self.currToken.value == "variable":
                 res.reg_adv()
                 self.advance()
                 if self.currToken.type == TOKEN_IDENTIFIER:
@@ -619,7 +638,7 @@ class Parser:
                 else:
                     return res.fail(InvalidSyntax(self.currToken.line, "Expected an identifier for the list"))
             else:
-                return res.fail(InvalidSyntax(curr.line, "Expected the variable keyword for declaration"))   
+                return res.fail(InvalidSyntax(curr.line, "Expected the variable or procedure keyword for declaration"))   
         else: 
             return res.fail(InvalidSyntax(curr.line, "Expected the global keyword for declaration"))   
 

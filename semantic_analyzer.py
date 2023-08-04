@@ -1,5 +1,5 @@
 # Type Operations
-from code_parser import BinaryOpNode, BooleanNode, ElseNode, FloatNode, ForNode, FunctionAccessNode, FunctionDefinitionNode, GlobalVariableCreationNode, IfNode, IntNode, ProgramNode, ReturnNode, StringNode, UnaryOpNode, VariableAccessNode, VariableAssignmentNode, VariableCreationNode
+from code_parser import BinaryOpNode, BooleanNode, ElseNode, FloatNode, ForNode, FunctionAccessNode, FunctionDefinitionNode, GlobalFunctionDefinitionNode, GlobalVariableCreationNode, IfNode, IntNode, ProgramNode, ReturnNode, StringNode, UnaryOpNode, VariableAccessNode, VariableAssignmentNode, VariableCreationNode
 from error import InvalidSemantics, ProgramError
 from tokenizer import Token
 
@@ -41,7 +41,7 @@ class SymbolTable:
             self.scopes[-1][name] = data_type
 
     def add_function_symbol(self, name, data_type):
-        self.scopes[-1][name] = data_type
+        self.functionScopes[-1][name] = data_type
 
     def get_symbol_type(self, name):
         for scope in reversed(self.scopes):
@@ -50,13 +50,16 @@ class SymbolTable:
         return None
 
     def get_function_symbol_type(self, name):
-        for scope in reversed(self.scopes):
+        for scope in reversed(self.functionScopes):
             if name in scope:
                 return scope[name]
         return None
 
     def get_global_declarations(self, name):
-        return self.scopes[0][name]
+        try:
+           return self.scopes[0][name]
+        except KeyError:
+            return None
 
     def enter_scope(self):
         self.scopes.append({})
@@ -78,15 +81,16 @@ class SymbolTable:
         self.add_symbol("putfloat", BOOL, True)
         self.add_symbol("putstring", BOOL, True)
         self.add_symbol("sqrt", FLOAT, True)
-        # self.add_symbol("getbool", BOOL)
-        # self.add_symbol("getinteger", INT)
-        # self.add_symbol("getfloat", FLOAT)
-        # self.add_symbol("getstring", STRING)
-        # self.add_symbol("pubool", [BOOL, BOOL])
-        # self.add_symbol("putinteger", [BOOL, INT])
-        # self.add_symbol("putfloat", [BOOL, FLOAT])
-        # self.add_symbol("putstring", [BOOL, STRING])
-        # self.add_symbol("sqrt", [FLOAT, INT])
+        # variable definitions
+        self.add_function_symbol("getbool", None)
+        self.add_function_symbol("getinteger", None)
+        self.add_function_symbol("getfloat", None)
+        self.add_function_symbol("getstring", None)
+        self.add_function_symbol("pubool", BOOL)
+        self.add_function_symbol("putinteger", INT)
+        self.add_function_symbol("putfloat", FLOAT)
+        self.add_function_symbol("putstring", STRING)
+        self.add_function_symbol("sqrt", INT)
 
 class SemanticAnalyzer:
     def __init__(self):
@@ -125,6 +129,8 @@ class SemanticAnalyzer:
             return self.visit_forNode(node)
         elif isinstance(node, FunctionDefinitionNode):
             return self.visit_functionDefinition(node)
+        elif isinstance(node, GlobalFunctionDefinitionNode):
+            return self.visit_globalFunctionDefinitionNode(node)
         elif isinstance(node, FunctionAccessNode):
             return self.visit_functionAccessNode(node)
         elif isinstance(node, ReturnNode):
@@ -236,7 +242,7 @@ class SemanticAnalyzer:
         if nameTaken:
             self.errors.append(InvalidSemantics(node.identifierToken.line, f"Names can only be used once for global declarations"))
             return
-        self.symbol_table.add_symbol(global_variable_identifier, global_variable_type, True)
+        self.symbol_table.add_symbol(global_variable_identifier, global_variable_type.value, True)
 
     def visit_variableAccessNode(self, node):
         variableType = self.symbol_table.get_symbol_type(node.identifierToken.value)
@@ -277,14 +283,18 @@ class SemanticAnalyzer:
     def visit_functionDefinition(self, node):
         function_name = node.identifier.value
         type_ = node.type.value
-        if self.symbol_table.tier == 0:
-            self.symbol_table.add_symbol(function_name, type_, True)
-        else:
-            self.symbol_table.add_symbol(function_name, type_)
+        self.symbol_table.add_symbol(function_name, type_)
 
+        types = []
+        if node.variables:
+            for var in node.variables:
+                types.append(var.type.value)
+                pass # list stuff maybe
+        self.symbol_table.add_function_symbol(function_name, types)
         self.symbol_table.current_func_type = type_
         self.symbol_table.function_type_stack.append(type_)
         self.symbol_table.enter_scope()
+
         #pass figure out variables matched with function
         if node.variables:
             for var in node.variables:
@@ -299,29 +309,66 @@ class SemanticAnalyzer:
                 self.visit(statement)
 
         self.symbol_table.leave_scope()
+
+    def visit_globalFunctionDefinitionNode(self, node):
+        function_name = node.identifier.value
+        type_ = node.type.value
+        self.symbol_table.add_symbol(function_name, type_, True)
+
         types = []
         if node.variables:
             for var in node.variables:
                 types.append(var.type.value)
                 pass # list stuff maybe
         self.symbol_table.add_function_symbol(function_name, types)
+        self.symbol_table.current_func_type = type_
+        self.symbol_table.function_type_stack.append(type_)
+        self.symbol_table.enter_scope()
+
+        #pass figure out variables matched with function
+        if node.variables:
+            for var in node.variables:
+                self.visit(var)
+
+        if node.declarations:
+            for definition in node.declarations:
+                self.visit(definition)
+
+        if node.statements:
+            for statement in node.statements:
+                self.visit(statement)
+
+        self.symbol_table.leave_scope()
 
     def visit_functionAccessNode(self, node):
         function_type = self.symbol_table.get_symbol_type(node.identifier.value)
-
         if not function_type:
             self.errors.append(InvalidSemantics(node.identifier.line, f"Function referenced before assignment"))
             return
+
+        func_var_types = self.symbol_table.get_function_symbol_type(node.identifier.value)
+        need_list =  isinstance(func_var_types, list)
         var_types = []
         if node.variables:
-            for var in node.variables:
-               var_types.append(self.visit(var))
-        
+            if isinstance(node.variables, list):
+                for var in node.variables:
+                   var_types.append(self.visit(var))
+            elif need_list:
+                var_types.append(self.visit(node.variables))
+            else:
+                var_types = self.visit(node.variables)
+        else:
+            var_types = None
+
         func_var_types = self.symbol_table.get_function_symbol_type(node.identifier.value)
         
         if func_var_types != var_types:
-            pass # error check here
-        return function_type
+            self.errors.append(InvalidSemantics(node.identifier.line, f"Function call variables do not match typing of function declaration"))
+            return
+        elif isinstance(function_type, list):
+            return function_type[0]
+        else:
+            return function_type
 
     def visit_returnNode(self, node):
         expression = self.visit(node.expression)
