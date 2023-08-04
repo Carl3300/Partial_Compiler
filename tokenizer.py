@@ -16,24 +16,10 @@ TOKEN_DIVIDE = 'DIVIDE'
 TOKEN_MOD = 'MOD'
 TOKEN_ASSIGN = 'ASSIGN'
 TOKEN_EQ = 'EQ'
-#TOKEN_PLUSEQ = 'PLUSEQ'
-#TOKEN_RPLUSEQ = 'RPLUSEQ'
-#TOKEN_MINUSEQ = 'MINUSEQ'
-#TOKEN_RMINUSEQ = 'RMINUSEQ'
-#TOKEN_MULTIPLYEQ = 'MULTIPLYEQ'
-#TOKEN_RMULTIPLYEQ = 'RMULTIPLYEQ'
-#TOKEN_DIVIDEDEQ = 'DIVIDEEQ'
-#TOKEN_RDIVIDEEQ = 'RDIVIDEEQ'
-#TOKEN_MODEQ = 'MODEQ'
-#TOKEN_RMODEQ = 'RMODEQ'
-#TOKEN_PLUS1 = 'PLUS1'
-#TOKEN_MINUS1 = 'MINUS1'
 TOKEN_LTHAN = 'LTHAN'
 TOKEN_GTHAN = 'GTHAN'
 TOKEN_GEQ = 'GEQ'
 TOKEN_LEQ = 'LEQ'
-# TOKEN_LSHIFT = 'LSHIFT'
-# TOKEN_RSHIFT = 'RSHIFT'
 TOKEN_NOT = 'NOT'
 TOKEN_NOTEQ = 'NOTEQ'
 TOKEN_BAND = 'BAND'
@@ -41,9 +27,6 @@ TOKEN_BOR = 'BOR'
 TOKEN_BNOT = 'BNOT'
 TOKEN_AND = 'AND'
 TOKEN_OR = 'OR'
-#TOKEN_XOR = 'XOR'
-#TOKEN_BNOT = 'BNOT'
-#TOKEN_TERNARY = 'TERNARY'
 TOKEN_COLON = 'COLON'
 TOKEN_PAREN = 'PAREN'
 TOKEN_CURLBRACKET = 'CURLBRACKET'
@@ -70,9 +53,6 @@ TOKEN_CHARLITERAL = 'CHARLITERAL'
 # Comment
 TOKEN_COMMENT = 'COMMENT'
 
-# C keywords = [ 'break', 'case', 'const', 'continue', 'default', 'do', 'else', 'enum', 'extern',
-#              'for', 'printf', 'goto', 'if', 'register', 'return', 'signed', 'sizeof', 'static', 
-#              'switch', 'typedef', 'union', 'unsigned', 'volatile', 'while']
 # Keywords
 keywords = [ 'list', 'variable', 'global', 'procedure', 'begin', 'end', "program" , 'break', 'if', 
              'then', 'else', "for", "true", "false", "is", "return", "not"]
@@ -80,16 +60,12 @@ keywords = [ 'list', 'variable', 'global', 'procedure', 'begin', 'end', "program
 # Comment Operators
 comments = ['//', '/*', '*/']
 
-# C Types = [ 'auto', 'char', 'double', 'float', 'int', 'short', 'long', 'struct', 'void']
 # Types
 types = [ 'bool', 'float', 'integer', 'string']
 
-# C Operators = [ '+', '-', '*', '/', '%','=', '+=', '=+', "-=", "=-", "*=", "=*", "/=", "=/", "%=", "=%", '++', "--",
-#              '<', '>', "<=", '>=', "<<", ">>", '!', '!=', '&', '|',  '&&', '||', '^', '~', '?', ':', "()", '{}', "[]" ]
-# C Operators
+# Operators
 operators = [ '+', '-', '*', '/', '%', '=',':=','==', ':', '<', '>', "<=", '>=', '!', '!=', '&', '|',  '&&', '||', "[]"]
 
-# C punctuations = [';', ',', '(', ')', '{', '}', '[', ']']
 # Punctuation
 punctuations = [';', ',', '(', ')', '{', '}', '[', ']', "."]
 
@@ -122,30 +98,6 @@ def assignOperator(tokens, word, line_number):
         tokens.append(Token(TOKEN_EQ, word, line_number))
     elif word == ':':
         tokens.append(Token(TOKEN_COLON, word, line_number))
-#    elif word == '+=':
-#        tokens.append(Token(TOKEN_PLUSEQ, word, line_number))
-#    elif word == '=+':
-#        tokens.append(Token(TOKEN_RPLUSEQ, word, line_number))
-#    elif word == '-=':
-#        tokens.append(Token(TOKEN_MINUSEQ, word, line_number))
-#    elif word == '=-':
-#        tokens.append(Token(TOKEN_RMINUSEQ, word, line_number))
-#    elif word == '*=':
-#        tokens.append(Token(TOKEN_MULTIPLYEQ, word, line_number))
-#    elif word == '=*':
-#        tokens.append(Token(TOKEN_RMULTIPLYEQ, word, line_number))
-#    elif word == '/=':
-#        tokens.append(Token(TOKEN_DIVIDEDEQ, word, line_number))
-#    elif word == '=/':
-#        tokens.append(Token(TOKEN_RDIVIDEEQ, word, line_number))
-#    elif word == '%=':
-#        tokens.append(Token(TOKEN_MODEQ, word, line_number))
-#    elif word == '=%':
-#        tokens.append(Token(TOKEN_RMODEQ, word, line_number))
-#    elif word == '++':
-#        tokens.append(Token(TOKEN_PLUS1, word, line_number))
-#    elif word == '--':
-#        tokens.append(Token(TOKEN_MINUS1, word, line_number))
     elif word == '<':
         tokens.append(Token(TOKEN_LTHAN, word, line_number))
     elif word == '>':
@@ -154,10 +106,6 @@ def assignOperator(tokens, word, line_number):
         tokens.append(Token(TOKEN_LEQ, word, line_number))
     elif word == '>=':
         tokens.append(Token(TOKEN_GEQ, word, line_number))
-    # elif word == '<<':
-    #     tokens.append(Token(TOKEN_LSHIFT, word, line_number))
-    # elif word == '>>':
-    #     tokens.append(Token(TOKEN_RSHIFT, word, line_number))
     elif word == '!':
         tokens.append(Token(TOKEN_NOT, word, line_number))
     elif word == '!=':
@@ -170,14 +118,6 @@ def assignOperator(tokens, word, line_number):
         tokens.append(Token(TOKEN_AND, word, line_number))
     elif word == '||':
         tokens.append(Token(TOKEN_OR, word, line_number))
-#    elif word == '^':
-#        tokens.append(Token(TOKEN_XOR, word, line_number))
-#    elif word == '~':
-#        tokens.append(Token(TOKEN_BNOT, word, line_number)) 
-#    elif word == '?':
-#        tokens.append(Token(TOKEN_TERNARY, word, line_number)) 
-#    elif word == ':':
-#        tokens.append(Token(TOKEN_COLON, word, line_number))
     elif word == '()':
         tokens.append(Token(TOKEN_PAREN, word, line_number)) 
     elif word == '{}':
@@ -213,6 +153,7 @@ def assignPunctutation(tokens, word, line_number):
 
 def Tokenize(code):
     tokens = []
+    nest_count = 0
     last_line_number = 0
     last_char = ''
     state =''
@@ -316,6 +257,8 @@ def Tokenize(code):
                         word = ""
                         state = ""
                         break
+                    else:
+                        nest_count += 1
                 else:
                     tokens = assignOperator(tokens, word, line_number)
                     state = ""
@@ -336,8 +279,12 @@ def Tokenize(code):
                         i -= 1
             elif state == TOKEN_COMMENT:
                 if last_char + char == "*/" and line_number == last_line_number:
-                    state = ""
-                    word = ""
+                    nest_count -= 1
+                    if nest_count == 0:
+                        state = ""
+                        word = ""
+                elif last_char + char == "/*":
+                    nest_count += 1
                 else:
                     last_char = char
                     last_line_number = line_number

@@ -1,5 +1,6 @@
 """
-https://github.com/Carl3300/compiler_for_C/blob/main/tokenizer.py assistance found for Parsing 
+https://github.com/Carl3300/compiler_for_C/blob/main/tokenizer.py assistance found for Parsing gave me the Result Idea
+error state 
 """
 
 from tokenizer import Token
@@ -21,24 +22,10 @@ TOKEN_DIVIDE = 'DIVIDE'
 TOKEN_MOD = 'MOD'
 TOKEN_ASSIGN = 'ASSIGN'
 TOKEN_EQ = 'EQ'
-#TOKEN_PLUSEQ = 'PLUSEQ'
-#TOKEN_RPLUSEQ = 'RPLUSEQ'
-#TOKEN_MINUSEQ = 'MINUSEQ'
-#TOKEN_RMINUSEQ = 'RMINUSEQ'
-#TOKEN_MULTIPLYEQ = 'MULTIPLYEQ'
-#TOKEN_RMULTIPLYEQ = 'RMULTIPLYEQ'
-#TOKEN_DIVIDEDEQ = 'DIVIDEEQ'
-#TOKEN_RDIVIDEEQ = 'RDIVIDEEQ'
-#TOKEN_MODEQ = 'MODEQ'
-#TOKEN_RMODEQ = 'RMODEQ'
-#TOKEN_PLUS1 = 'PLUS1'
-#TOKEN_MINUS1 = 'MINUS1'
 TOKEN_LTHAN = 'LTHAN'
 TOKEN_GTHAN = 'GTHAN'
 TOKEN_GEQ = 'GEQ'
 TOKEN_LEQ = 'LEQ'
-# TOKEN_LSHIFT = 'LSHIFT'
-# TOKEN_RSHIFT = 'RSHIFT'
 TOKEN_NOT = 'NOT'
 TOKEN_NOTEQ = 'NOTEQ'
 TOKEN_BAND = 'BAND'
@@ -46,9 +33,6 @@ TOKEN_BOR = 'BOR'
 TOKEN_BNOT = 'BNOT'
 TOKEN_AND = 'AND'
 TOKEN_OR = 'OR'
-#TOKEN_XOR = 'XOR'
-#TOKEN_BNOT = 'BNOT'
-#TOKEN_TERNARY = 'TERNARY'
 TOKEN_COLON = 'COLON'
 TOKEN_PAREN = 'PAREN'
 TOKEN_CURLBRACKET = 'CURLBRACKET'
@@ -74,7 +58,6 @@ TOKEN_CHARLITERAL = 'CHARLITERAL'
 
 # Comment
 TOKEN_COMMENT = 'COMMENT'
-
 
 # Type Operations
 class TypeNode:
@@ -139,7 +122,7 @@ class GlobalVariableCreationNode():
             return f"List: {self.identifierToken.value}: {self.type.value} - Size: {self.size}"
         return f"{self.identifierToken.value}: {self.type.value}"
 
-class VariableAccessNode(): # this is for variable identifiers
+class VariableAccessNode():
     def __init__(self, identifierToken , index=None) -> None:
         self.identifierToken = identifierToken
         self.index = index
